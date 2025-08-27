@@ -1,0 +1,23 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+    {% block head %}
+    <header>
+        <div class="top_header">
+            <a href="https://beedev-services.com">
+                <img src="{% static 'images/logo.png' %}" alt="Logo">
+            </a>
+            <h2>Client Portal</h2>
+            <div class="hidden_nav">
+                <a href="javascript:void(0);" class="icon" onclick="menu()">
+                    <i class="fa fa-bars"></i>
+                </a>
+                <nav id="myLinks">
+                    <a href="#">Link</a>
+                </nav>
+            </div>
+        </div>
+        {% block nav %} {% include 'block/nav.html' %} {% endblock nav %}
+    </header>
+    {% endblock head%}
+</html>
