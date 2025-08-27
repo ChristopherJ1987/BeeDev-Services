@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+    {% block flash %}
+        <div>
+            <span class="session"></span>
+            {% if messages %}
+            <section class='messages'>
+                {% for message in messages %}
+                <h3 {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</h3>
+                {% endfor %}
+            </section>
+            {% endif %}
+        </div>
+    {% endblock flash %}
+</html>

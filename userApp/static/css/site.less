@@ -1,0 +1,52 @@
+@import './root/root.less';
+
+body {
+    .flexcolumn();
+    background-color: var(--background);
+
+    header {
+        .flexcolumn();
+        width: 100%;
+        
+        .top_header {
+            .flexrow();
+            width: 100%;
+            justify-content: space-between;
+            padding: 0 8px;
+
+            a {
+                font-size: 1.3rem;
+                color: var(--black);
+                img {
+                    height: 75px;
+                }
+            }
+            #myLinks {
+                display: none;
+                color: var(--black);
+            }
+        }
+        .main_nav {
+            .flexrow();
+            justify-content: flex-start;
+            width: 100%;
+            background-color: var(--black);
+            padding: 8px 36px;
+
+            a {
+                color: var(--yellow);
+                font-size: 1.3rem;
+
+                &:hover {
+                    color: var(--white);
+                }
+            }
+        }
+    }
+    main {
+        .flexcolumn();
+    }
+    footer {
+        .flexrow();
+    }
+}
