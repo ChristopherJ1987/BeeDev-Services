@@ -15,7 +15,17 @@ SECRET_KEY = env('SECRET_KEY', default='dev-server-only')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost'])
+# -------- Hosts & CSRF (add your domains) --------
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[
+    'localhost', '127.0.0.1',
+    'portal.beedev-services.com',
+])
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://beedev-services.com',
+    'https://www.beedev-services.com',
+    'https://portal.beedev-services.com',
+]
 
 
 # Application definition
@@ -29,6 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'userApp.apps.UserappConfig',
+    # Only load browser reload in dev (optional but recommended)
+    *(['django_browser_reload'] if env.bool('DEBUG', default=False) else []),
 ]
 
 MIDDLEWARE = [
@@ -39,10 +51,13 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # only in dev
+    *( ['django_browser_reload.middleware.BrowserReloadMiddleware'] if env.bool('DEBUG', default=False) else [] ),
 ]
 
 ROOT_URLCONF = 'portal.urls'
 
+# -------- Templates: allow project-level overrides (admin/login.html etc.) --------
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -70,7 +85,8 @@ WSGI_APPLICATION = 'portal.wsgi.application'
 # }
 DATABASES = {
     'default': {
-        'ENGINE': 'mysql.connector.django',
+        # 'ENGINE': 'mysql.connector.django',
+        'ENGINE': 'django.db.backends.mysql',
         'NAME': 'thehives_beedev_portal',
         'USER': 'root',
         'PASSWORD': 'HoneyBee#4',
@@ -96,6 +112,15 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Auth
+AUTH_USER_MODEL = 'userApp.User'
+
+# -------- Auth: shared login + redirects --------
+AUTH_USER_MODEL = 'userApp.User'
+LOGIN_URL = 'accounts:login'
+LOGIN_REDIRECT_URL = 'core:post_login'
+LOGOUT_REDIRECT_URL = 'https://beedev-services.com/'
+
 
 # Internationalization
 LANGUAGE_CODE = 'en-us'
@@ -103,11 +128,25 @@ TIME_ZONE = 'US/Eastern'
 USE_I18N = True
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-STATIC_URL = 'static/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# -------- Static files: separate source vs. collect dir --------
+# Use /static/ as URL (leading and trailing slash)
+STATIC_URL = '/static/'
+
+# Project-level source folder for your brand CSS/logo (used in dev; collected in prod)
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+
+# Final collect destination for production (run `collectstatic` -> served by web server/WhiteNoise)
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Media (unchanged)
 MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# -------- Production hardening (safe to set; they no-op in dev) --------
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+SECURE_SSL_REDIRECT = env.bool('SECURE_SSL_REDIRECT', default=False)
