@@ -12,5 +12,7 @@
         <link rel="stylesheet" href="{% static 'css/site.css'%}">
         <title>{{title.title}} - BeeDev Services</title>
     </head>
+    {% load django_browser_reload %}
+    {% django_browser_reload_script %}
     {% endblock head %}
 </html>
