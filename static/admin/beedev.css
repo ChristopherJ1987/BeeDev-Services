@@ -1,0 +1,41 @@
+:root {
+  --yellow: #F3DB18;
+  --black: #000000;
+  --background: #F7F6F0;
+  --white: #F5F5F5;
+  --green: #426e54;
+}
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  font-family: 'Source Sans Pro', sans-serif;
+  font-display: swap;
+}
+.flexrow {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+.flexcolumn {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+body #container {
+  background-color: var(--background);
+  color: var(--black);
+}
+body #container #header {
+  background-color: var(--yellow);
+}
+body #container #header #branding .admin_header a {
+  color: var(--black);
+  font-size: 1.3rem;
+}
+body #container nav .breadcrumbs {
+  background-color: var(--black);
+  color: var(--yellow);
+}

@@ -1,0 +1,32 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{# Page <title> shown in the browser tab #}
+{% block title %}BeeDev Services — Portal Admin{% endblock %}
+
+{# Add your brand CSS on every admin page #}
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'admin/beedev.css' %}">
+{% endblock %}
+
+{# Replace the default “Django administration” header #}
+{% block branding %}
+  <h1 class="admin_header">
+    <a href="{% url 'admin:index' %}">
+      <img src="{% static 'admin/logo.svg' %}" alt="" style="height:28px;vertical-align:middle;margin-right:8px;">
+      BeeDev Services — Portal Admin
+    </a>
+  </h1>
+{% endblock %}
+
+{# Optional: hide the global top-right nav if you want it cleaner #}
+{% block nav-global %}{% endblock %}
+
+{# Optional: custom footer shown on all admin pages #}
+{% block footer %}
+  <div class="beedev-admin-footer">
+    <span>&copy; {% now "Y" %} BeeDev Services</span>
+    <a href="https://beedev-services.com" target="_blank" rel="noopener">Main site</a>
+  </div>
+{% endblock %}
