@@ -112,13 +112,11 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# Auth
-AUTH_USER_MODEL = 'userApp.User'
 
 # -------- Auth: shared login + redirects --------
 AUTH_USER_MODEL = 'userApp.User'
-LOGIN_URL = 'accounts:login'
-LOGIN_REDIRECT_URL = 'core:post_login'
+LOGIN_URL = 'userApp:login'
+LOGIN_REDIRECT_URL = 'userApp:post_login'
 LOGOUT_REDIRECT_URL = 'https://beedev-services.com/'
 
 

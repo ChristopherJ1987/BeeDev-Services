@@ -1,14 +1,5 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-    {% block head %} {% include 'block/head.html' %} {% endblock head %}
-<body>
-    {% block header %} {% include 'block/header.html' %} {% endblock header %}
-    {% block flash %} {% include 'block/flash.html' %} {% endblock flash %}
-    <main>
+{% extends "base.html" %}
 
-        
-    </main>
-    {% block footer %} {% include 'block/footer.html' %} {% endblock footer %}
-</body>
-</html>
+{% block content %}
+  <h1>Welcome to the portal</h1>
+{% endblock content %}
