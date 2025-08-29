@@ -45,11 +45,8 @@ body {
     }
     main {
         .flexcolumn();
-
-        .login {
-            .flexcolumn();
-
-            .title {
+        
+        .title {
                 text-align: center;
                 margin: 0px auto 24px;
                 color: var(--black);
@@ -68,9 +65,16 @@ body {
                     font-size: 3.5rem;
                 }
             }
+
+        .login {
+            .flexcolumn();
+
             .login-form {
                 background-color: var(--yellow);
                 padding: 1em;
+                .flexcolumn();
+                height: 300px;
+                justify-content: space-evenly;
             }
         }
     }
@@ -78,6 +82,5 @@ body {
         .flexrow();
     }
 }
-body { outline: 4px solid hotpink !important; }
 
 
