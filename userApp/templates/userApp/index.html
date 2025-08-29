@@ -2,19 +2,9 @@
 {% load i18n static %}
 
 {% block content %}
-<section class="login-wrap">
-  <div class="login-card">
-    <h1 class="login-title">Welcome to the BeeDev Portal</h1>
-    <p class="login-sub">Clients & Employees: sign in below.</p>
 
-    {# show any flash messages #}
-    {% if messages %}
-      <ul class="messages">
-        {% for message in messages %}
-          <li class="message {{ message.tags }}">{{ message }}</li>
-        {% endfor %}
-      </ul>
-    {% endif %}
+  <div class="login">
+    <h1 class="title">Welcome to the <span class="altTitle">BeeDev Portal</span></h1>
 
     {# built-in AuthenticationForm from LoginView #}
     {% if form.errors %}
@@ -24,23 +14,29 @@
       </p>
     {% endif %}
 
-    <form method="post" action="">
+    <form class="login-form" method="post" action="">
       {% csrf_token %}
+      <p>Clients & Employees: sign in below.</p>
 
-      <div class="form-row">
-        <label for="id_username">{% translate "Username" %}</label>
+      <div class="form-row input_box">
         {{ form.username }}
         {{ form.username.errors }}
+        <span class="icon" aria-hidden="true">📧</span>
       </div>
 
-      <div class="form-row">
-        <label for="id_password">{% translate "Password" %}</label>
-        <div class="password-field">
-          {{ form.password }}
-          <button type="button" class="show-pass" aria-label="Show password" onclick="togglePass()">👁</button>
-        </div>
+      <div class="form-row input_box password-field">
+        {{ form.password }}
         {{ form.password.errors }}
+        <button
+          type="button"
+          class="show-pass"
+          aria-controls="id_password"
+          aria-label="Show password"
+          aria-pressed="false"
+          onclick="togglePass()"
+        >👁</button>
       </div>
+
 
       {# preserve ?next=... if present #}
       <input type="hidden" name="next" value="{{ next }}">
@@ -56,7 +52,7 @@
       Employees can open <a href="/admin/">Admin</a> after logging in (no second login needed).
     </p>
   </div>
-</section>
+
 
 <script>
 function togglePass() {

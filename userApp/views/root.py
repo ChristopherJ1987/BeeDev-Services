@@ -1,17 +1,3 @@
-# from django.shortcuts import render, redirect
-# from django.contrib import messages
-# from userApp.models import *
-
-# def index(request):
-#     title = {
-#         'title': 'Index',
-#         'header': 'Header'
-#     }
-#     context = {
-#         'title': title,
-#     }
-#     return render(request, 'index.html', context)
-
 from django.contrib.auth.views import LoginView
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
@@ -23,7 +9,7 @@ class PortalLogin(LoginView):
     # You can add your custom context just like your index() example:
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["title"] = {"title": "Index", "header": "Header"}
+        ctx["title"] = {"title": "BeeDev Services - Portal"}
         return ctx
 
 @login_required

@@ -1,4 +1,4 @@
-@import './root/root.less';
+@import '../root/root.less';
 
 body {
     .flexcolumn();
@@ -15,7 +15,7 @@ body {
             padding: 0 8px;
 
             a {
-                font-size: 1.3rem;
+                font-size: 2em;
                 color: var(--black);
                 img {
                     height: 75px;
@@ -45,8 +45,39 @@ body {
     }
     main {
         .flexcolumn();
+
+        .login {
+            .flexcolumn();
+
+            .title {
+                text-align: center;
+                margin: 0px auto 24px;
+                color: var(--black);
+                font-size: 2rem;
+
+                .altTitle {
+                    color: var(--yellow);
+                    text-shadow: 
+                    -1px -1px 0 var(--black),1px -1px 0 var(--black),-1px  1px 0 var(--black),1px  1px 0 var(--black);
+                    letter-spacing: 0.05rem;
+                    transition: all 0.1s ease;
+                }
+            }
+            @media (min-width:700px) {
+                .title {
+                    font-size: 3.5rem;
+                }
+            }
+            .login-form {
+                background-color: var(--yellow);
+                padding: 1em;
+            }
+        }
     }
     footer {
         .flexrow();
     }
 }
+body { outline: 4px solid hotpink !important; }
+
+
