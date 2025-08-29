@@ -48,7 +48,7 @@ body header .top_header {
   padding: 0 8px;
 }
 body header .top_header a {
-  font-size: 1.3rem;
+  font-size: 2em;
   color: var(--black);
 }
 body header .top_header a img {
@@ -81,9 +81,39 @@ body main {
   justify-content: center;
   align-items: center;
 }
+body main .login {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+body main .login .title {
+  text-align: center;
+  margin: 0px auto 24px;
+  color: var(--black);
+  font-size: 2rem;
+}
+body main .login .title .altTitle {
+  color: var(--yellow);
+  text-shadow: -1px -1px 0 var(--black), 1px -1px 0 var(--black), -1px 1px 0 var(--black), 1px 1px 0 var(--black);
+  letter-spacing: 0.05rem;
+  transition: all 0.1s ease;
+}
+@media (min-width: 700px) {
+  body main .login .title {
+    font-size: 3.5rem;
+  }
+}
+body main .login .login-form {
+  background-color: var(--yellow);
+  padding: 1em;
+}
 body footer {
   display: flex;
   flex-direction: row;
   justify-content: center;
   align-items: center;
+}
+body {
+  outline: 4px solid hotpink !important;
 }
