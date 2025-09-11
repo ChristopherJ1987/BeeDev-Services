@@ -1,0 +1,15 @@
+{% extends "base.html" %} 
+{% block content %} 
+{# Example page header and or sub-title 
+    {% include "block/page_header.html" %} - default
+    {% include "block/page_header.html" with heading="Dashboard" %} - override
+    {% include "block/page_header.html" with show_subtitle=True %} - show subtitle
+    #}
+{% include "block/page_header.html" %}
+
+<p>This CBV uses <code>CommonContextMixin</code>.</p>
+<p>Your page <strong>title</strong> in the HTML head is already set to: "{{ title }}".
+</p>
+<p>The body heading above comes from <code>page_heading</code> (if set), or falls back to <code>title</code>.
+</p>
+{% endblock content %}

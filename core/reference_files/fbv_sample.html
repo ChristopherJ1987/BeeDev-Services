@@ -1,0 +1,19 @@
+{% extends "base.html" %} 
+{% block content %} 
+{# Example page header and or sub-title 
+    {% include "block/page_header.html" %} - default
+    {% include "block/page_header.html" with heading="Dashboard" %} - override
+    {% include "block/page_header.html" with show_subtitle=True %} - show subtitle
+    #}
+{% include "block/page_header.html" %}
+
+<p>Brand (from global context processor): {{ brand }}</p>
+
+<ul>
+    {% for x in example_list %}
+    <li>{{ x }}</li>
+    {% empty %}
+    <li><em>No items yet.</em></li>
+    {% endfor %}
+</ul>
+{% endblock content %}

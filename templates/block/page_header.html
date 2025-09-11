@@ -1,0 +1,23 @@
+{# Renders a consistent page heading.
+
+Usage examples:
+  {% include "block/page_header.html" %}
+    → uses page_heading if set, else title, else "Untitled Page"
+
+  {% include "block/page_header.html" with heading="Custom Heading" %}
+    → overrides everything and shows "Custom Heading" as H1
+
+Optional subtitle:
+  Pass show_subtitle=True if you want to show the full title string
+  beneath the H1 (useful if your page_heading is different).
+#}
+
+<header class="page-header">
+  <h1 class="page-title">
+    {{ heading|default:page_heading|default:title|default:"Untitled Page" }}
+  </h1>
+
+  {% if show_subtitle %}
+    <p class="page-subtitle">{{ title }}</p>
+  {% endif %}
+</header>
