@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, reverse_lazy
 # from . import views
 from .views import PortalLogin, post_login, staff_home, client_home
 from django.conf import settings
@@ -14,7 +14,7 @@ urlpatterns = [
     path("post-login/", post_login, name="post_login"),
     path("staff/", staff_home, name="staff_home"),
     path("client/", client_home, name="client_home"),
-    path("logout/", LogoutView.as_view(next_page="userApp:login"), name="logout"),
+    path("logout/", LogoutView.as_view(), name="logout"),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
