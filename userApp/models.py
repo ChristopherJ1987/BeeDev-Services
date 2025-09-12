@@ -1,7 +1,33 @@
-# accounts/models.py
+# userApp/models.py
+import os  # NEW
+import uuid  # NEW
+import datetime  # NEW
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.conf import settings
+from django.core.exceptions import ValidationError  # NEW
+from django.core.validators import FileExtensionValidator  # NEW
+from django.templatetags.static import static  # NEW
+
+# --- Image settings / validators (NEW) ---
+ALLOWED_IMAGE_EXTS = ["jpg", "jpeg", "png", "webp"]
+MAX_IMAGE_BYTES = 3 * 1024 * 1024  # 3 MB
+
+def validate_image_size(f):  # NEW
+    if f.size and f.size > MAX_IMAGE_BYTES:
+        raise ValidationError(f"Image too large (>{MAX_IMAGE_BYTES//1024//1024}MB).")
+
+def avatar_upload_to(instance, filename):  # NEW
+    """
+    uploads to: media/profiles/YYYY/MM/<userId>-<uuid>.<ext>
+    """
+    ext = os.path.splitext(filename)[1].lower().lstrip(".") or "jpg"
+    if ext not in ALLOWED_IMAGE_EXTS:
+        ext = "jpg"
+    today = datetime.date.today()
+    user_id = getattr(instance.user, "id", "anon")
+    return f"profiles/{today.year}/{today.month:02d}/{user_id}-{uuid.uuid4().hex}.{ext}"
+
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, username, email, password=None, **extra_fields):
@@ -34,19 +60,57 @@ class User(AbstractUser):
     email = models.EmailField(unique=True)
     role = models.CharField(max_length=20, choices=Roles.choices, default=Roles.CLIENT)
 
-    # Remove firstName/lastName, AbstractUser already has `first_name` and `last_name`
-    # Remove password (it’s handled securely by AbstractUser)
-
     objects = CustomUserManager()
 
     def __str__(self):
         return self.username
+    
+    # --- Helpers ---
+    @property
+    def preferred_name(self) -> str:
+        """First name if present, else username."""
+        return (self.first_name or "").strip() or self.username
+
+    @property
+    def display_name(self) -> str:
+        """Full name if present, else username (nice for UI)."""
+        full = f"{(self.first_name or '').strip()} {(self.last_name or '').strip()}".strip()
+        return full or self.username
 
     def fullName(self):
         return f"{self.first_name} {self.last_name}"
 
+    @property  # NEW
+    def avatar_url(self) -> str:
+        """
+        Always returns a URL:
+        - employee profile image if present
+        - else client profile image if present
+        - else static placeholder
+        """
+        try:
+            ep = getattr(self, "employee_profile", None)
+            if ep and ep.profile_image:
+                return ep.profile_image.url
+        except Exception:
+            pass
+        try:
+            cp = getattr(self, "profile", None)
+            if cp and cp.profile_image:
+                return cp.profile_image.url
+        except Exception:
+            pass
+        return static("img/avatar.svg")  # add this file under /static/img/
+
 class ClientProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile")
+
+    # NEW: profile image
+    profile_image = models.ImageField(
+        upload_to=avatar_upload_to, blank=True, null=True,
+        validators=[FileExtensionValidator(ALLOWED_IMAGE_EXTS), validate_image_size],
+        help_text="JPEG/PNG/WebP, up to 3MB."
+    )
 
     # Company / contact
     company_name   = models.CharField(max_length=200, blank=True)
@@ -70,6 +134,14 @@ class ClientProfile(models.Model):
     
 class EmployeeProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="employee_profile")
+
+    # NEW: profile image
+    profile_image = models.ImageField(
+        upload_to=avatar_upload_to, blank=True, null=True,
+        validators=[FileExtensionValidator(ALLOWED_IMAGE_EXTS), validate_image_size],
+        help_text="JPEG/PNG/WebP, up to 3MB."
+    )
+
     job_title      = models.CharField(max_length=120, blank=True)
     work_email     = models.EmailField(blank=True)
     work_phone     = models.CharField(max_length=30, blank=True)

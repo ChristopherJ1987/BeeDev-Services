@@ -10,6 +10,7 @@
                 <a href="{% url 'userApp:employee_home' %}">Employee Dashboard</a>
             {% else %}
                 <a href="{% url 'userApp:client_home' %}">Dashboard</a>
+                <a href="{% url 'userApp:view_client_profile' %}">Profile</a>
             {% endif %}
             <form method="post" action="{% url 'userApp:logout' %}" style="display:inline;">
                 {% csrf_token %}

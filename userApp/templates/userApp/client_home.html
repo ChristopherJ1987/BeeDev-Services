@@ -1,8 +1,9 @@
 {% extends "base.html" %}
 {% load i18n static %}
+{% load page_title %}
 
 {% block content %}
 <div class="client">
-    <h1 class="title">Dash<span class="altTitle">board</span></h1>
+    <h1 class="title">{{ heading|default:page_heading|default:title_short|default:"Untitled Page"|stylize_title:"altTitle" }}</h1>
 </div>
 {% endblock content %}
