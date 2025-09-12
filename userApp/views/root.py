@@ -40,4 +40,5 @@ def client_home(request):
         "user_name": u.get_full_name() or u.username,
     }
     ctx.update(base_ctx(request, title="Dashboard"))
+    ctx['page_heading'] = 'Dashboard'
     return render(request, "userApp/client_home.html", ctx)

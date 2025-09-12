@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'userApp.apps.UserappConfig',
+    'core.apps.CoreConfig',
     # Only load browser reload in dev (optional but recommended)
     *(['django_browser_reload'] if env.bool('DEBUG', default=False) else []),
 ]
