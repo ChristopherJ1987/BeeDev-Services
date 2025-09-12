@@ -7,20 +7,158 @@ body {
         color: var(--black);
         
         #header {
+            .flexrow();
+            justify-content: space-between;
             background-color: var(--yellow);
             #branding {
+
                 .admin_header {
+                    margin-top: 1em;
                     a {
                         color: var(--black);
                         font-size: 1.3rem;
                     }
                 }
             }
+            #user-tools {
+                color: var(--black);
+                font-size: 1rem;
+
+                button {
+                    padding: 10px 14px;
+                    background-color: var(--black);
+                    color: var(--yellow);
+                    font-size: 1rem;
+                    border-radius: 30px;
+                    cursor: pointer;
+                }
+
+                a {
+                    color: var(--black);
+                    font-size: 1rem;
+                }
+                .theme-toggle {
+                    display: none;
+                }
+            }
         }
         nav {
             .breadcrumbs {
-                background-color: var(--black);
+                background-color: var(--green);
+                color: var(--white);
+                font-size: 1.3rem;
+
+                a {
+                    color: var(--white);
+                    font-size: 1.3rem;
+                }
+            }
+        }
+        .main {
+            .content {
+                .flexrow();
+                align-items: flex-start;
+                justify-content: flex-start;
+                width: 100%;
+
+                .colMS {
+                    h1 {
+                        color: var(--black);
+                        font-size: 1.3rem;
+                    }
+                    #content-main {
+                        width: 150%;
+
+                        .module {
+                            table {
+                                caption {
+                                    background-color: var(--green);
+                                    font-size: 1rem;
+                                }
+                                tbody {
+                                    tr {
+                                        th, td {
+                                            a {
+                                                color: var(--yellow);
+                                                font-size: 1rem;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    #content-related {
+                        .module {
+                            h2, h3, li a {
+                                color: var(--yellow);
+                            }
+                            .mini {
+                                color: var(--green);
+                            }
+                        }
+                    }
+                }
+                #content {
+                    h1 {
+                        font-size: 1.3rem;
+                    }
+                    #content-main, #content-related {
+                        p {
+                            color: var(--white);
+                        }
+                        .module {
+                            color: var(--yellow);
+
+                            h2 {
+                                color: var(--white);
+                                background-color: var(--green);
+                            }
+                            table {
+                                caption {
+                                    background-color: var(--green);
+                                    font-size: 1rem;
+                                }
+                                tbody {
+                                    tr {
+                                        th, td {
+                                            a {
+                                                color: var(--yellow);
+                                                font-size: 1rem;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            #nav-sidebar {
+                flex: 0 0 300px;
+            }
+            button {
                 color: var(--yellow);
+            }
+            .sticky {
+                .module {
+                    table {
+                        caption {
+                            background-color: var(--green);
+                            font-size: 1rem;
+                        }
+                        tbody {
+                            tr {
+                                th, td {
+                                    a {
+                                        color: var(--yellow);
+                                        font-size: 1rem;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
