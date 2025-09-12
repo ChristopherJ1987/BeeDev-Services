@@ -119,7 +119,8 @@ AUTH_PASSWORD_VALIDATORS = [
 AUTH_USER_MODEL = 'userApp.User'
 LOGIN_URL = 'userApp:login'
 LOGIN_REDIRECT_URL = 'userApp:post_login'
-LOGOUT_REDIRECT_URL = 'https://beedev-services.com/'
+# LOGOUT_REDIRECT_URL = 'https://beedev-services.com/'
+LOGOUT_REDIRECT_URL = '/'
 
 
 # Internationalization

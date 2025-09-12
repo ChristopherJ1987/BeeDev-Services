@@ -68,9 +68,22 @@ body header .main_nav {
   background-color: var(--black);
   padding: 8px 36px;
 }
+body header .main_nav .linklike {
+  padding: 10px 14px;
+  background-color: var(--yellow);
+  color: var(--black);
+  font-size: 1.3rem;
+  border-radius: 30px;
+  cursor: pointer;
+}
+body header .main_nav .linklike:hover {
+  color: var(--white);
+  background-color: var(--black);
+}
 body header .main_nav a {
   color: var(--yellow);
   font-size: 1.3rem;
+  padding: 10px 14px;
 }
 body header .main_nav a:hover {
   color: var(--white);
