@@ -1,9 +1,9 @@
-from django.db.models.signals import post_migrate, post_save, pre_save
+from django.db.models.signals import post_migrate, post_save, pre_save, m2m_changed
 from django.dispatch import receiver
 from django.contrib.auth.models import Group
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from .models import ClientProfile, EmployeeProfile
+from .models import ClientProfile, EmployeeProfile  # if you created EmployeeProfile
 
 ROLE_GROUPS = ["Owner", "Admin", "Employee", "Client"]
 AUX_GROUPS  = ["HR"]
@@ -40,12 +40,11 @@ def sync_role_to_group_and_profiles(sender, instance: User, created, **kwargs):
         g, _ = Group.objects.get_or_create(name=target)
         instance.groups.add(g)
 
-    # --- profiles (mutually exclusive)
+    # --- profiles (optional; keep if you're using both profiles)
     old = getattr(instance, "_old_role", None)
     is_client      = (instance.role == User.Roles.CLIENT)
     is_companyside = (instance.role in (User.Roles.EMPLOYEE, User.Roles.ADMIN, User.Roles.OWNER))
 
-    # CREATE proper profile on first creation or role change
     if created or old != instance.role:
         if is_client:
             ClientProfile.objects.get_or_create(user=instance)
@@ -54,4 +53,21 @@ def sync_role_to_group_and_profiles(sender, instance: User, created, **kwargs):
             EmployeeProfile.objects.get_or_create(user=instance)
             ClientProfile.objects.filter(user=instance).delete()
 
-    # Optional: if you prefer to keep old profiles (not delete), comment out the deletes above.
+    # --- is_staff auto-manage (role OR HR group)
+    in_hr = instance.groups.filter(name="HR").exists()
+    desired_staff = is_companyside or in_hr
+    if instance.is_staff != desired_staff:
+        # Use update() to avoid recursive save signals
+        instance.__class__.objects.filter(pk=instance.pk).update(is_staff=desired_staff)
+
+@receiver(m2m_changed, sender=User.groups.through)
+def ensure_staff_follows_hr_group(sender, instance: User, action, reverse, model, pk_set, **kwargs):
+    # When HR group membership changes, keep is_staff in sync
+    if action in {"post_add", "post_remove", "post_clear"}:
+        company_roles = {getattr(instance.Roles, "EMPLOYEE", "EMPLOYEE"),
+                         getattr(instance.Roles, "ADMIN", "ADMIN"),
+                         getattr(instance.Roles, "OWNER", "OWNER")}
+        in_hr = instance.groups.filter(name="HR").exists()
+        desired_staff = (instance.role in company_roles) or in_hr
+        if instance.is_staff != desired_staff:
+            instance.__class__.objects.filter(pk=instance.pk).update(is_staff=desired_staff)
