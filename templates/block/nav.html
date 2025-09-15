@@ -8,6 +8,7 @@
             {% if request.user.is_staff or request.user.role == "EMPLOYEE" %}
                 <a href="/admin/">Admin</a>
                 <a href="{% url 'userApp:employee_home' %}">Employee Dashboard</a>
+                <a href="{% url 'userApp:view_employee_profile' %}">Profile</a>
             {% else %}
                 <a href="{% url 'userApp:client_home' %}">Dashboard</a>
                 <a href="{% url 'userApp:view_client_profile' %}">Profile</a>

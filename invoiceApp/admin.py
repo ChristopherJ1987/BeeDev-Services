@@ -1,4 +1,5 @@
 # invoiceApp/admin.py
+from decimal import Decimal
 from django.contrib import admin
 from django.utils.html import format_html
 from .models import Invoice, InvoiceLineItem, InvoiceAppliedDiscount, Payment
@@ -64,7 +65,9 @@ class InvoiceAdmin(admin.ModelAdmin):
     actions = ["recalc_totals_action", "refresh_status_action"]
 
     def balance_display(self, obj):
-        return format_html("<b>{:.2f}</b>", obj.balance_due or 0)
+            value = obj.balance_due or Decimal("0.00")
+            # Pre-format, then inject safely
+            return format_html("<b>{}</b>", f"{value:.2f}")
     balance_display.short_description = "Balance Due"
 
     # Permissions
