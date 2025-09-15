@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from django.templatetags.static import static
 from django.utils.text import slugify
 
-# Logo settings/validators
+# ---------- Validators / helpers ----------
 ALLOWED_LOGO_EXTS = ["jpg", "jpeg", "png", "webp"]
 MAX_LOGO_BYTES = 3 * 1024 * 1024  # 3 MB
 
@@ -28,7 +28,9 @@ def logo_upload_to(instance, filename):
     return f"company_logos/{today.year}/{today.month:02d}/{base}-{uuid.uuid4().hex}.{ext}"
 
 
-
+# =======================================================================
+#                              COMPANY
+# =======================================================================
 class Company(models.Model):
     # Account-level status (relationship with you)
     class Status(models.TextChoices):
@@ -129,6 +131,9 @@ class Company(models.Model):
             pass
         return static("img/company-logo-placeholder.svg")
 
+# =======================================================================
+#                          COMPANY CONTACT
+# =======================================================================
 class CompanyContact(models.Model):
     """
     Zero or more contacts per company.
@@ -161,7 +166,9 @@ class CompanyContact(models.Model):
     def __str__(self):
         return f"{self.company.name}: {self.name}"
 
-
+# =======================================================================
+#                          COMPANY LINK
+# =======================================================================
 class CompanyLink(models.Model):
     """
     Links associated with a Company.
