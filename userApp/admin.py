@@ -1,41 +1,67 @@
+# userApp/admin.py
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import Group
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Q
-from .models import User, ClientProfile, EmployeeProfile  # if you added EmployeeProfile; otherwise remove
+from django.utils.html import format_html
 
-def is_owner(user):
-    return user.is_active and (user.is_superuser or user.groups.filter(name="Owner").exists())
+from .models import User, ClientProfile, EmployeeProfile
 
-def is_admin(user):
-    return user.is_active and user.groups.filter(name="Admin").exists()
+# ---- helpers ----
+def is_owner(u):  # superuser OR Owner group
+    return u.is_active and (u.is_superuser or u.groups.filter(name="Owner").exists())
 
-def is_hr(user):
-    return user.is_active and user.groups.filter(name="HR").exists()
+def is_admin(u):  # Admin group
+    return u.is_active and u.groups.filter(name="Admin").exists()
 
-def is_employee(user):
-    # Treat pure employees (not Owner/Admin/HR) as Employee
-    return (
-        user.is_active
-        and not user.is_superuser
-        and not user.groups.filter(name__in=["Owner", "Admin", "HR"]).exists()
-        and (getattr(user, "role", None) == User.Roles.EMPLOYEE or user.groups.filter(name="Employee").exists())
-    )
+def is_hr(u):     # HR group
+    return u.is_active and u.groups.filter(name="HR").exists()
 
+def is_plain_staff(u):  # staff but not Owner/Admin (HR counts as plain staff here)
+    return u.is_active and u.is_staff and not is_owner(u) and not is_admin(u)
+
+# ---- Inlines ----
 class ClientProfileInline(admin.StackedInline):
     model = ClientProfile
     fk_name = "user"
     can_delete = False
-    extra = 1
+    extra = 0
     max_num = 1
+    readonly_fields = ("image_preview",)
+
+    fields = (
+        "profile_image", "image_preview",
+        "company", "company_name", "company_email", "phone",
+        "address_line1", "address_line2", "city", "state_region", "postal_code", "country",
+    )
+
+    def image_preview(self, obj):
+        if obj and obj.profile_image:
+            return format_html('<img src="{}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;" />', obj.profile_image.url)
+        return "—"
+    image_preview.short_description = "Preview"
 
 class EmployeeProfileInline(admin.StackedInline):
     model = EmployeeProfile
     fk_name = "user"
     can_delete = False
-    extra = 1
+    extra = 0
     max_num = 1
+    readonly_fields = ("image_preview",)
+
+    fields = (
+        "profile_image", "image_preview",
+        "job_title", "work_email", "work_phone", "discord_handle",
+        "address_line1", "address_line2", "city", "state_region", "postal_code", "country",
+        "notes_internal",
+    )
+
+    def image_preview(self, obj):
+        if obj and obj.profile_image:
+            return format_html('<img src="{}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;" />', obj.profile_image.url)
+        return "—"
+    image_preview.short_description = "Preview"
 
 @admin.register(User)
 class CustomUserAdmin(BaseUserAdmin):
@@ -44,189 +70,191 @@ class CustomUserAdmin(BaseUserAdmin):
     search_fields = ("username", "email", "first_name", "last_name")
     ordering      = ("username",)
 
+    # we’ll attach inlines dynamically via get_inline_instances()
     inlines = [ClientProfileInline, EmployeeProfileInline]
 
-    # ----- Access gates -----
+    # ---- module visibility ----
     def has_module_permission(self, request):
-        # Allow Employees into the Users app
-        return is_owner(request.user) or is_admin(request.user) or is_hr(request.user) or is_employee(request.user)
+        # Allow all staff (Owner/Admin/HR/Employee) to enter the Users app
+        return request.user.is_staff
 
     def has_view_permission(self, request, obj=None):
         return self.has_module_permission(request)
 
+    # ---- add / change / delete ----
     def has_add_permission(self, request):
-        # Owner or HR can add; Admin/Employee cannot
-        return is_owner(request.user) or is_hr(request.user)
+        # For now: only Owner may add users (you can allow HR later if desired)
+        return is_owner(request.user)
+
+    def has_delete_permission(self, request, obj=None):
+        return is_owner(request.user)
 
     def has_change_permission(self, request, obj=None):
+        # Owner/Admin can edit everyone (Admin blocked from touching Owners/Admins below)
         if is_owner(request.user):
             return True
         if is_admin(request.user):
             if obj is None:
                 return True
+            # Admins cannot edit Owners/Admins/superusers
             if obj.is_superuser or obj.role in (User.Roles.OWNER, User.Roles.ADMIN):
                 return False
             return True
-        if is_hr(request.user):
+
+        # HR & plain staff: can only open THEIR OWN user page (to change password)
+        if is_plain_staff(request.user):
             if obj is None:
                 return True
-            return obj.role == User.Roles.EMPLOYEE
-        if is_employee(request.user):
-            if obj is None:
-                return True  # needed to open the changelist
-            # Employee can edit ONLY their own record
-            return (obj.pk == request.user.pk) or (obj.role == User.Roles.CLIENT)
+            return obj.pk == request.user.pk
+
         return False
 
-    def has_delete_permission(self, request, obj=None):
-        return is_owner(request.user)
-
-    # ----- Scope results -----
+    # ---- scope queryset ----
     def get_queryset(self, request):
         qs = super().get_queryset(request)
+
         if is_owner(request.user) or is_admin(request.user):
             return qs
+
         if is_hr(request.user):
-            return qs.filter(role=User.Roles.EMPLOYEE)
-        if is_employee(request.user):
-            # See self + all Clients
-            return qs.filter(Q(pk=request.user.pk) | Q(role=User.Roles.CLIENT))
+            # HR: see Employees + self (so they can reach their own password form)
+            return qs.filter(Q(role=User.Roles.EMPLOYEE) | Q(pk=request.user.pk))
+
+        if is_plain_staff(request.user):
+            # Plain employees: only themselves
+            return qs.filter(pk=request.user.pk)
+
         return qs.none()
 
-    # ----- Inlines shown per target user's role and viewer -----
-    def get_inline_instances(self, request, obj=None):
-        if obj is None:
-            return []
-        instances = []
-        for inline_class in self.inlines:
-            if inline_class is ClientProfileInline:
-                # Show client profile inline only when viewing a Client,
-                # and hide from HR (and optionally from Employees—keep or drop as you like)
-                if obj.role == User.Roles.CLIENT and not is_hr(request.user):
-                    instances.append(inline_class(self.model, self.admin_site))
-            elif inline_class is EmployeeProfileInline:
-                # Show employee profile inline when viewing company-side users
-                if obj.role in (User.Roles.EMPLOYEE, User.Roles.ADMIN, User.Roles.OWNER):
-                    instances.append(inline_class(self.model, self.admin_site))
-        return instances
-
-    # ----- Forms per viewer role -----
-    def get_fieldsets(self, request, obj=None):
-        base = list(super().get_fieldsets(request, obj))
-        if is_owner(request.user):
-            base.append((_('Role'), {"fields": ("role",)}))
-
-        if is_admin(request.user) and not is_owner(request.user):
-            return (
-                (None, {"fields": ("username", "password")}),
-                (_('Personal info'), {"fields": ("first_name", "last_name", "email")}),
-                (_('Important dates'), {"fields": ("last_login", "date_joined")}),
-            )
-
-        if is_hr(request.user) and not is_owner(request.user):
-            return (
-                (None, {"fields": ("username", "password")}),
-                (_('Personal info'), {"fields": ("first_name", "last_name", "email")}),
-                (_('Important dates'), {"fields": ("last_login", "date_joined")}),
-            )
-
-        if is_employee(request.user) and not is_owner(request.user):
-            # Minimal fields for employees; they can edit only their own record (enforced above)
-            return (
-                (None, {"fields": ("username", "password")}),
-                (_('Personal info'), {"fields": ("first_name", "last_name", "email")}),
-                (_('Important dates'), {"fields": ("last_login", "date_joined")}),
-            )
-
-        return tuple(base)
-
-    add_fieldsets = (
-        (None, {
-            "classes": ("wide",),
-            "fields": ("username", "email", "first_name", "last_name", "password1", "password2", "role"),
-        }),
-    )
-
-    # ----- Read-only protections -----
+    # ---- lock down fields ----
     def get_readonly_fields(self, request, obj=None):
         ro = set(super().get_readonly_fields(request, obj))
+        # Nobody but Owner can touch permissions-related fields
         if not is_owner(request.user):
             ro.update({"is_superuser", "is_staff", "groups", "user_permissions", "last_login", "date_joined"})
+        # Admin cannot change role
         if is_admin(request.user) and not is_owner(request.user):
             ro.add("role")
-        if is_hr(request.user) and not is_owner(request.user):
-            ro.add("role")
-        if is_employee(request.user) and not is_owner(request.user):
-            # Employees never edit role/permissions; if viewing a Client, they have view-only anyway
-            ro.add("role")
+        # HR & plain staff: everything read-only (they’ll use "change password" only)
+        if is_plain_staff(request.user):
+            ro.update({"username", "first_name", "last_name", "email", "role"})
         return tuple(ro)
 
-    # ----- Limit role choices (extra belt & suspenders) -----
-    def formfield_for_choice_field(self, db_field, request, **kwargs):
-        if db_field.name == "role":
-            if is_admin(request.user) and not is_owner(request.user):
-                kwargs["choices"] = [(User.Roles.EMPLOYEE, "Employee"), (User.Roles.CLIENT, "Client")]
-            if is_hr(request.user) and not is_owner(request.user):
-                kwargs["choices"] = [(User.Roles.EMPLOYEE, "Employee")]
-            if is_employee(request.user) and not is_owner(request.user):
-                # Employees should never change role
-                kwargs["choices"] = [(User.Roles.EMPLOYEE, "Employee")]  # not used when viewing Clients
-        return super().formfield_for_choice_field(db_field, request, **kwargs)
+    # Slimmer forms for non-owners
+    def get_fieldsets(self, request, obj=None):
+        if is_owner(request.user):
+            base = list(super().get_fieldsets(request, obj))
+            base.append((_('Role'), {"fields": ("role",)}))
+            return tuple(base)
 
-    # ----- Hide groups for non-Owners -----
+        # Minimal form for Admin/HR/Employees (all read-only except password link)
+        return (
+            (None, {"fields": ("username", "password")}),
+            (_('Personal info'), {"fields": ("first_name", "last_name", "email")}),
+            (_('Important dates'), {"fields": ("last_login", "date_joined")}),
+        )
+
+    # Prevent non-owners from assigning sensitive groups
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
         if not is_owner(request.user) and "groups" in form.base_fields:
             form.base_fields["groups"].queryset = Group.objects.exclude(name__in=["Owner", "Admin"])
         return form
 
-    # ----- Enforce policies on save -----
-    def save_model(self, request, obj, form, change):
-        # HR can only ever save users as EMPLOYEE
-        if is_hr(request.user) and not is_owner(request.user):
-            obj.role = User.Roles.EMPLOYEE
-
-        # Admin cannot escalate to Admin/Owner
-        if is_admin(request.user) and not is_owner(request.user):
-            if obj.role in (User.Roles.ADMIN, User.Roles.OWNER):
-                if change:
-                    prev = type(obj).objects.get(pk=obj.pk)
-                    obj.role = prev.role
-                else:
-                    obj.role = User.Roles.EMPLOYEE
-
-        # Employees can only edit themselves (guarded above); keep role unchanged
-        if is_employee(request.user) and not is_owner(request.user):
-            if change and obj.pk != request.user.pk:
-                # Shouldn't happen due to has_change_permission, but double-guard
-                return
-            # Never allow employee to change role
-            if "role" in form.fields:
-                obj.role = type(obj).objects.get(pk=obj.pk).role if change else User.Roles.EMPLOYEE
-
-        super().save_model(request, obj, form, change)
+    # Decide which inlines to show to whom
+    def get_inline_instances(self, request, obj=None):
+        if obj is None:
+            return []
+        # Plain staff looking at themselves: hide inlines (password-only)
+        if is_plain_staff(request.user) and obj.pk == request.user.pk:
+            return []
+        instances = []
+        # Show ClientProfile inline only when target user is a CLIENT; hide from HR
+        if obj.role == User.Roles.CLIENT and not is_hr(request.user):
+            instances.append(ClientProfileInline(self.model, self.admin_site))
+        # Show EmployeeProfile inline when target user is company-side (Emp/Admin/Owner)
+        if obj.role in (User.Roles.EMPLOYEE, User.Roles.ADMIN, User.Roles.OWNER):
+            # HR can see this inline for others, not for themselves
+            if not (is_hr(request.user) and obj.pk == request.user.pk):
+                instances.append(EmployeeProfileInline(self.model, self.admin_site))
+        return instances
 
 
-# Optional: keep separate menu entries
+# ---- ClientProfile & EmployeeProfile admins ----
+
 @admin.register(ClientProfile)
 class ClientProfileAdmin(admin.ModelAdmin):
-    list_display = ("user", "company_name", "phone", "city", "state_region", "updated_at")
-    search_fields = ("user__username", "user__email", "company_name", "phone", "city", "state_region", "postal_code")
-    autocomplete_fields = ["user"]
-    list_filter = ("country",)
+    list_display = ("user", "company", "company_name", "phone", "city", "state_region", "updated_at")
+    search_fields = ("user__username", "user__email", "company__name", "company_name", "phone", "city", "state_region", "postal_code")
+    autocomplete_fields = ["user", "company"]
+    readonly_fields = ("image_preview",)
+
+    fields = (
+        "user",
+        "profile_image", "image_preview",
+        "company",
+        "company_name", "company_email", "phone",
+        "address_line1", "address_line2", "city", "state_region", "postal_code", "country",
+        "created_at", "updated_at",
+    )
+    readonly_fields += ("created_at", "updated_at")
+
+    def image_preview(self, obj):
+        if obj and obj.profile_image:
+            return format_html('<img src="{}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;" />', obj.profile_image.url)
+        return "—"
+    image_preview.short_description = "Preview"
+
+    # Keep HR out of client profiles (view or edit)
     def has_module_permission(self, request):
-        # Hide from HR if desired; allow Employees to see client profiles only if you want
-        if is_hr(request.user):
+        if is_hr(request.user) or not request.user.is_staff:
             return False
-        return super().has_module_permission(request)
+        return True
+
 
 @admin.register(EmployeeProfile)
 class EmployeeProfileAdmin(admin.ModelAdmin):
     list_display = ("user", "job_title", "work_phone", "discord_handle", "updated_at")
-    search_fields = ("user__username", "user__email", "job_title", "work_phone", "slack_handle")
+    search_fields = ("user__username", "user__email", "job_title", "work_phone", "discord_handle")
     autocomplete_fields = ["user"]
-    list_filter = ("city", "state_region", "country")
+    readonly_fields = ("image_preview", "created_at", "updated_at")
+
+    fields = (
+        "user",
+        "profile_image", "image_preview",
+        "job_title", "work_email", "work_phone", "discord_handle",
+        "address_line1", "address_line2", "city", "state_region", "postal_code", "country",
+        "notes_internal",
+        "created_at", "updated_at",
+    )
+
+    def image_preview(self, obj):
+        if obj and obj.profile_image:
+            return format_html('<img src="{}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;" />', obj.profile_image.url)
+        return "—"
+    image_preview.short_description = "Preview"
+
     def has_module_permission(self, request):
-        if is_hr(request.user):
+        # Only staff may see; clients cannot. HR may see.
+        return request.user.is_staff
+
+    def has_view_permission(self, request, obj=None):
+        return self.has_module_permission(request)
+
+    def has_add_permission(self, request):
+        # Keep adds to Owner/Admin for now
+        return is_owner(request.user) or is_admin(request.user)
+
+    def has_change_permission(self, request, obj=None):
+        if is_owner(request.user) or is_admin(request.user):
             return True
-        return super().has_module_permission(request)
+        if is_hr(request.user):
+            if obj is None:
+                return True
+            # HR can edit employee profiles except their own
+            return obj.user_id != request.user.id
+        # Plain staff cannot edit EmployeeProfile in admin
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return is_owner(request.user)
