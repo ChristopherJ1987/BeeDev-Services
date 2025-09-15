@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'invoiceApp.apps.InvoiceappConfig',
     'projectApp.apps.ProjectappConfig',
     'ticketApp.apps.TicketappConfig',
+    'prospectApp.apps.ProspectappConfig',
     'core.apps.CoreConfig',
     # Only load browser reload in dev (optional but recommended)
     *(['django_browser_reload'] if env.bool('DEBUG', default=False) else []),
@@ -127,6 +128,7 @@ LOGIN_URL = 'userApp:login'
 LOGIN_REDIRECT_URL = 'userApp:post_login'
 # LOGOUT_REDIRECT_URL = 'https://beedev-services.com/'
 LOGOUT_REDIRECT_URL = '/'
+PROSPECTS_CLIENT_MODEL = "companyApp.Company"
 
 
 # Internationalization
