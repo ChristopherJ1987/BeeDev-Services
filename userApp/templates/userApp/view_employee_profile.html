@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load page_title %}
+
+{% block content %}
+  <h1 class="title">{{ heading|default:page_heading|default:title_short|default:"Untitled Page"|stylize_title:"altTitle" }}</h1>
+  <div class="info">
+    <h3>Your information:</h3>
+    <p>First Name: {{user.first_name}}</p>
+    <p>Last Name: {{user.last_name}}</p>
+    <p>Username: {{user.username}}</p>
+    <p>Email: {{user.email}}</p>
+    <p>Discord: {{profile.discord_handle}}</p>
+  </div>
+  <div class="info">
+    <h3>Job Information</h3>
+    <p>Job Title: {{profile.job_title}}</p>
+    <p>Email: {{profile.company_email}}</p>
+    <p>Phone: {{profile.work_phone}}</p>
+    <address>
+      {{profile.address_line1}} <br>
+      {{profile.address_line2}} <br>
+      {{profile.city}}, {{profile.state_region}} {{profile.postal_code}} {{profile.country}}
+    </address>
+  </div>
+{% endblock content %}
