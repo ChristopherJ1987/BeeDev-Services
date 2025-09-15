@@ -9,7 +9,7 @@ from django.core.validators import FileExtensionValidator
 from django.core.exceptions import ValidationError
 
 
-# ---------- File validators / helpers ----------
+# ---------- Validators / helpers ----------
 PDF_VALIDATOR = FileExtensionValidator(["pdf"])
 SIGN_IMG_VALIDATOR = FileExtensionValidator(["png", "jpg", "jpeg", "webp"])
 
@@ -301,7 +301,6 @@ class ProposalDraft(models.Model):
         ProposalEvent.objects.create(proposal=proposal, kind=ProposalEvent.Kind.CREATED, actor=created_by)
         return proposal
     
-# -------------------- DRAFT DISCOUNTS (snapshot) --------------------
 class DraftDiscount(models.Model):
     draft          = models.ForeignKey("ProposalDraft", on_delete=models.CASCADE, related_name="discounts")
     discount       = models.ForeignKey(Discount, on_delete=models.PROTECT, related_name="draft_usages")
@@ -526,7 +525,6 @@ class Proposal(models.Model):
             self.amount_total = sub + (self.amount_tax or Decimal("0.00"))
         super().save(*args, **kwargs)
 
-# -------------------- PROPOSAL DISCOUNTS (snapshot) --------------------
 class ProposalAppliedDiscount(models.Model):
     proposal       = models.ForeignKey("Proposal", on_delete=models.CASCADE, related_name="applied_discounts")
     discount_code  = models.SlugField(max_length=40)            # snapshot of Discount.code
@@ -538,7 +536,6 @@ class ProposalAppliedDiscount(models.Model):
 
     class Meta:
         ordering = ("sort_order", "id")
-
 
 class ProposalLineItem(models.Model):
     proposal    = models.ForeignKey(Proposal, on_delete=models.CASCADE, related_name="line_items")
@@ -554,7 +551,6 @@ class ProposalLineItem(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.quantity} @ {self.unit_price})"
-
 
 class ProposalRecipient(models.Model):
     """
@@ -574,7 +570,6 @@ class ProposalRecipient(models.Model):
 
     def __str__(self):
         return f"{self.email} · {self.proposal}"
-
 
 class ProposalEvent(models.Model):
     """

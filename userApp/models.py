@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from django.templatetags.static import static
 
-# --- Image settings / validators ---
+# ---------- Validators / helpers ----------
 ALLOWED_IMAGE_EXTS = ["jpg", "jpeg", "png", "webp"]
 MAX_IMAGE_BYTES = 3 * 1024 * 1024  # 3 MB
 
@@ -28,7 +28,9 @@ def avatar_upload_to(instance, filename):
     return f"profiles/{today.year}/{today.month:02d}/{user_id}-{uuid.uuid4().hex}.{ext}"
 
 
-# --- User model + manager ---
+# =======================================================================
+#                               USER
+# =======================================================================
 class CustomUserManager(BaseUserManager):
     def create_user(self, username, email, password=None, **extra_fields):
         if not email:
@@ -48,7 +50,6 @@ class CustomUserManager(BaseUserManager):
         if extra_fields.get("is_superuser") is not True:
             raise ValueError("Superuser must have is_superuser=True.")
         return self.create_user(username, email, password, **extra_fields)
-
 
 class User(AbstractUser):
     class Roles(models.TextChoices):
@@ -104,8 +105,9 @@ class User(AbstractUser):
             pass
         return static("img/avatar.svg")  # ensure this exists in your static files
 
-
-# --- Client & Employee profiles ---
+# =======================================================================
+#                             PROFILES
+# =======================================================================
 class ClientProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile")
 
@@ -143,7 +145,6 @@ class ClientProfile(models.Model):
 
     def __str__(self):
         return f"Profile for {self.user.username}"
-
 
 class EmployeeProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="employee_profile")

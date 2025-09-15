@@ -7,6 +7,7 @@ from django.utils import timezone
 from django.core.validators import FileExtensionValidator
 from django.core.exceptions import ValidationError
 
+# ---------- Validators / helpers ----------
 PDF_VALIDATOR = FileExtensionValidator(["pdf"])
 MAX_PDF_BYTES = 15 * 1024 * 1024
 
@@ -22,6 +23,9 @@ def invoice_pdf_upload_to(instance, filename):
     return f"invoices/{comp_bucket}/{today.year}/{today.month:02d}/{ident}-{uuid.uuid4().hex}.pdf"
 
 
+# =======================================================================
+#                              INVOICE
+# =======================================================================
 class Invoice(models.Model):
     class Status(models.TextChoices):
         DRAFT    = "DRAFT",    "Draft"
@@ -162,7 +166,9 @@ class Invoice(models.Model):
         inv.recalc_totals(save=True)
         return inv
 
-
+# =======================================================================
+#                          INVOICE LINE ITEMS
+# =======================================================================
 class InvoiceLineItem(models.Model):
     invoice     = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name="line_items")
     sort_order  = models.PositiveIntegerField(default=0)
@@ -178,7 +184,9 @@ class InvoiceLineItem(models.Model):
     def __str__(self):
         return f"{self.name} ({self.quantity} @ {self.unit_price})"
 
-
+# =======================================================================
+#                          INVOICE DISCOUNT
+# =======================================================================
 class InvoiceAppliedDiscount(models.Model):
     invoice       = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name="applied_discounts")
     discount_code = models.SlugField(max_length=40)
@@ -191,7 +199,9 @@ class InvoiceAppliedDiscount(models.Model):
     class Meta:
         ordering = ("sort_order", "id")
 
-
+# =======================================================================
+#                             PAYMENT
+# =======================================================================
 class Payment(models.Model):
     class Method(models.TextChoices):
         CARD  = "CARD",  "Card"
