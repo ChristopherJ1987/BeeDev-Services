@@ -1,7 +1,5 @@
 # userApp/models.py
-import os
-import uuid
-import datetime
+import os, uuid, datetime
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.conf import settings
