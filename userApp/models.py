@@ -1,25 +1,26 @@
 # userApp/models.py
-import os  # NEW
-import uuid  # NEW
-import datetime  # NEW
+import os
+import uuid
+import datetime
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.conf import settings
-from django.core.exceptions import ValidationError  # NEW
-from django.core.validators import FileExtensionValidator  # NEW
-from django.templatetags.static import static  # NEW
+from django.core.exceptions import ValidationError
+from django.core.validators import FileExtensionValidator
+from django.templatetags.static import static
 
-# --- Image settings / validators (NEW) ---
+# --- Image settings / validators ---
 ALLOWED_IMAGE_EXTS = ["jpg", "jpeg", "png", "webp"]
 MAX_IMAGE_BYTES = 3 * 1024 * 1024  # 3 MB
 
-def validate_image_size(f):  # NEW
+def validate_image_size(f):
     if f.size and f.size > MAX_IMAGE_BYTES:
         raise ValidationError(f"Image too large (>{MAX_IMAGE_BYTES//1024//1024}MB).")
 
-def avatar_upload_to(instance, filename):  # NEW
+def avatar_upload_to(instance, filename):
     """
-    uploads to: media/profiles/YYYY/MM/<userId>-<uuid>.<ext>
+    Store at: media/profiles/YYYY/MM/<userId>-<uuid>.<ext>
+    Non-allowed extensions are coerced to .jpg (validation still enforces allowed types).
     """
     ext = os.path.splitext(filename)[1].lower().lstrip(".") or "jpg"
     if ext not in ALLOWED_IMAGE_EXTS:
@@ -29,13 +30,14 @@ def avatar_upload_to(instance, filename):  # NEW
     return f"profiles/{today.year}/{today.month:02d}/{user_id}-{uuid.uuid4().hex}.{ext}"
 
 
+# --- User model + manager ---
 class CustomUserManager(BaseUserManager):
     def create_user(self, username, email, password=None, **extra_fields):
         if not email:
             raise ValueError("Users must have an email address")
         email = self.normalize_email(email)
         user = self.model(username=username, email=email, **extra_fields)
-        user.set_password(password)   # 🔒 hashes password
+        user.set_password(password)  # hashes password
         user.save(using=self._db)
         return user
 
@@ -49,44 +51,46 @@ class CustomUserManager(BaseUserManager):
             raise ValueError("Superuser must have is_superuser=True.")
         return self.create_user(username, email, password, **extra_fields)
 
+
 class User(AbstractUser):
     class Roles(models.TextChoices):
         EMPLOYEE = "EMPLOYEE", "Employee"
-        CLIENT = "CLIENT", "Client"
-        ADMIN = "ADMIN", "Admin"
-        OWNER = "OWNER", "Owner"
-        HR = "HR", "HR"
+        CLIENT   = "CLIENT",   "Client"
+        ADMIN    = "ADMIN",    "Admin"
+        OWNER    = "OWNER",    "Owner"
+        HR       = "HR",       "HR"
 
     email = models.EmailField(unique=True)
-    role = models.CharField(max_length=20, choices=Roles.choices, default=Roles.CLIENT)
+    role  = models.CharField(max_length=20, choices=Roles.choices, default=Roles.CLIENT)
 
     objects = CustomUserManager()
 
     def __str__(self):
         return self.username
-    
+
     # --- Helpers ---
     @property
     def preferred_name(self) -> str:
-        """First name if present, else username."""
+        """First name if present; otherwise username."""
         return (self.first_name or "").strip() or self.username
 
     @property
     def display_name(self) -> str:
-        """Full name if present, else username (nice for UI)."""
+        """Full name if present; otherwise username (nice for UI)."""
         full = f"{(self.first_name or '').strip()} {(self.last_name or '').strip()}".strip()
         return full or self.username
 
     def fullName(self):
+        # legacy helper; Django also has get_full_name()
         return f"{self.first_name} {self.last_name}"
 
-    @property  # NEW
+    @property
     def avatar_url(self) -> str:
         """
-        Always returns a URL:
+        Always returns something renderable:
         - employee profile image if present
         - else client profile image if present
-        - else static placeholder
+        - else a static placeholder
         """
         try:
             ep = getattr(self, "employee_profile", None)
@@ -100,60 +104,81 @@ class User(AbstractUser):
                 return cp.profile_image.url
         except Exception:
             pass
-        return static("img/avatar.svg")  # add this file under /static/img/
+        return static("img/avatar.svg")  # ensure this exists in your static files
 
+
+# --- Client & Employee profiles ---
 class ClientProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile")
 
-    # NEW: profile image
+    # Profile image
     profile_image = models.ImageField(
-        upload_to=avatar_upload_to, blank=True, null=True,
+        upload_to=avatar_upload_to,
+        blank=True,
+        null=True,
         validators=[FileExtensionValidator(ALLOWED_IMAGE_EXTS), validate_image_size],
-        help_text="JPEG/PNG/WebP, up to 3MB."
+        help_text="JPEG/PNG/WebP, up to 3MB.",
+    )
+
+    # Link to companyApp.Company (keep local company_* fields for pre-signup/backup)
+    company = models.ForeignKey(
+        "companyApp.Company", null=True, blank=True,
+        on_delete=models.SET_NULL, related_name="client_profiles"
     )
 
     # Company / contact
-    company_name   = models.CharField(max_length=200, blank=True)
-    company_email  = models.EmailField(blank=True)           # optional, separate from user.email
-    phone          = models.CharField(max_length=30, blank=True)  # keep simple; validate in form
+    company_name  = models.CharField(max_length=200, blank=True)
+    company_email = models.EmailField(blank=True)  # optional, separate from user.email
+    phone         = models.CharField(max_length=30, blank=True)
 
     # Address
+    address_line1 = models.CharField(max_length=200, blank=True)
+    address_line2 = models.CharField(max_length=200, blank=True)
+    city          = models.CharField(max_length=120, blank=True)
+    state_region  = models.CharField(max_length=120, blank=True)
+    postal_code   = models.CharField(max_length=20, blank=True)
+    country       = models.CharField(max_length=120, blank=True, default="USA")
+
+    # Timestamps
+    created_at    = models.DateTimeField(auto_now_add=True)
+    updated_at    = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Profile for {self.user.username}"
+
+
+class EmployeeProfile(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="employee_profile")
+
+    # Profile image
+    profile_image = models.ImageField(
+        upload_to=avatar_upload_to,
+        blank=True,
+        null=True,
+        validators=[FileExtensionValidator(ALLOWED_IMAGE_EXTS), validate_image_size],
+        help_text="JPEG/PNG/WebP, up to 3MB.",
+    )
+
+    # Employee details
+    job_title      = models.CharField(max_length=120, blank=True)
+    work_email     = models.EmailField(blank=True)
+    work_phone     = models.CharField(max_length=30, blank=True)
+    discord_handle = models.CharField(max_length=60, blank=True)
+
+    # Address (optional)
     address_line1  = models.CharField(max_length=200, blank=True)
     address_line2  = models.CharField(max_length=200, blank=True)
     city           = models.CharField(max_length=120, blank=True)
     state_region   = models.CharField(max_length=120, blank=True)
-    postal_code    = models.CharField(max_length=20,  blank=True)
+    postal_code    = models.CharField(max_length=20, blank=True)
     country        = models.CharField(max_length=120, blank=True, default="USA")
+
+    # Internal notes (admin only)
+    notes_internal = models.TextField(blank=True)
 
     # Timestamps
     created_at     = models.DateTimeField(auto_now_add=True)
     updated_at     = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Profile for {self.user.username}"
-    
-class EmployeeProfile(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="employee_profile")
-
-    # NEW: profile image
-    profile_image = models.ImageField(
-        upload_to=avatar_upload_to, blank=True, null=True,
-        validators=[FileExtensionValidator(ALLOWED_IMAGE_EXTS), validate_image_size],
-        help_text="JPEG/PNG/WebP, up to 3MB."
-    )
-
-    job_title      = models.CharField(max_length=120, blank=True)
-    work_email     = models.EmailField(blank=True)
-    work_phone     = models.CharField(max_length=30, blank=True)
-    discord_handle   = models.CharField(max_length=60, blank=True)
-    # keep address optional; often not needed for staff
-    address_line1  = models.CharField(max_length=200, blank=True)
-    address_line2  = models.CharField(max_length=200, blank=True)
-    city           = models.CharField(max_length=120, blank=True)
-    state_region   = models.CharField(max_length=120, blank=True)
-    postal_code    = models.CharField(max_length=20,  blank=True)
-    country        = models.CharField(max_length=120, blank=True, default="USA")
-    notes_internal = models.TextField(blank=True)  # visible in admin only
-    created_at     = models.DateTimeField(auto_now_add=True)
-    updated_at     = models.DateTimeField(auto_now=True)
-    def __str__(self): return f"EmployeeProfile({self.user.username})"
+        return f"EmployeeProfile({self.user.username})"
