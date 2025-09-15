@@ -53,6 +53,26 @@ def signature_image_upload_to(instance, filename):
 #                            PRICING LAYER
 # =======================================================================
 
+class Discount(models.Model):
+    class Kind(models.TextChoices):
+        PERCENT = "PERCENT", "Percent"
+        FIXED   = "FIXED",   "Fixed amount"
+
+    code        = models.SlugField(max_length=40, unique=True)   # e.g. 'new-client', 'spring-20'
+    name        = models.CharField(max_length=120)
+    kind        = models.CharField(max_length=10, choices=Kind.choices, default=Kind.PERCENT)
+    value       = models.DecimalField(max_digits=10, decimal_places=2)  # percent (e.g. 10.00) or fixed amount
+    is_active   = models.BooleanField(default=True)
+    starts_at   = models.DateField(null=True, blank=True)
+    ends_at     = models.DateField(null=True, blank=True)
+    notes       = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ("code",)
+
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+
 class PricingRole(models.Model):
     """
     Canonical roles used when pricing hourly work (e.g., 'DESIGN', 'DEV', 'PM').
@@ -69,7 +89,6 @@ class PricingRole(models.Model):
 
     def __str__(self):
         return f"{self.label} ({self.code})"
-
 
 class RateCard(models.Model):
     """
@@ -89,7 +108,6 @@ class RateCard(models.Model):
     def __str__(self):
         return f"{self.name} ({self.currency})"
 
-
 class LaborRate(models.Model):
     """
     Hourly rate for a specific role within a rate card.
@@ -107,7 +125,6 @@ class LaborRate(models.Model):
 
     def __str__(self):
         return f"{self.rate_card}: {self.role.code} @ {self.hourly_rate}"
-
 
 class ServiceCatalogItem(models.Model):
     """
@@ -161,6 +178,11 @@ class ProposalDraft(models.Model):
         CONVERTED  = "CONVERTED",  "Converted to Proposal"
         CANCELED   = "CANCELED",   "Canceled"
 
+    class DepositType(models.TextChoices):
+        NONE    = "NONE",    "None"
+        PERCENT = "PERCENT", "Percent of total"
+        FIXED   = "FIXED",   "Fixed amount"
+
     company     = models.ForeignKey("companyApp.Company", on_delete=models.CASCADE, related_name="proposal_drafts")
     created_by  = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="proposal_drafts")
     rate_card   = models.ForeignKey(RateCard, on_delete=models.PROTECT, related_name="drafts")
@@ -177,9 +199,16 @@ class ProposalDraft(models.Model):
     status      = models.CharField(max_length=12, choices=Status.choices, default=Status.DRAFT)
     internal_notes = models.TextField(blank=True)
 
+    # totals
     subtotal    = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+    discount_total= models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     tax_amount  = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     total       = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+
+    # deposit
+    deposit_type  = models.CharField(max_length=10, choices=DepositType.choices, default=DepositType.NONE)
+    deposit_value = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))  # percent or fixed
+    deposit_amount= models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))  # computed snapshot
 
     created_at  = models.DateTimeField(auto_now_add=True)
     updated_at  = models.DateTimeField(auto_now=True)
@@ -193,10 +222,31 @@ class ProposalDraft(models.Model):
     def recalc_totals(self, *, save=True):
         items = list(self.selections.all())
         sub = sum((i.extended_price or Decimal("0.00")) for i in items)
-        self.subtotal = sub
-        self.total = sub + (self.tax_amount or Decimal("0.00"))
+
+        # discounts against subtotal
+        disc_sum = Decimal("0.00")
+        for dd in self.discounts.all().order_by("sort_order"):
+            amt = dd.compute_amount(base_subtotal=sub) or Decimal("0.00")
+            dd.amount_applied = amt
+            dd.save(update_fields=["amount_applied"])
+            disc_sum += amt
+
+        self.subtotal       = sub
+        self.discount_total = disc_sum
+
+        base = (self.subtotal - self.discount_total).quantize(Decimal("0.01"))
+        self.total = base + (self.tax_amount or Decimal("0.00"))
+
+        # deposit snapshot
+        if self.deposit_type == self.DepositType.PERCENT:
+            self.deposit_amount = (self.total * (self.deposit_value or Decimal("0.00")) / Decimal("100.00")).quantize(Decimal("0.01"))
+        elif self.deposit_type == self.DepositType.FIXED:
+            self.deposit_amount = (self.deposit_value or Decimal("0.00")).quantize(Decimal("0.01"))
+        else:
+            self.deposit_amount = Decimal("0.00")
+
         if save:
-            self.save(update_fields=["subtotal", "total", "updated_at"])
+            self.save(update_fields=["subtotal", "discount_total", "total", "deposit_amount", "updated_at"])
         return self.total
 
     def materialize_to_proposal(self, *, created_by=None, valid_until=None):
@@ -207,7 +257,7 @@ class ProposalDraft(models.Model):
         proposal = Proposal.objects.create(
             company=self.company,
             created_by=created_by,
-            contact=None,  # can be set later if you map to CompanyContact
+            contact=None,
             title=self.title,
             version=1,
             status=Proposal.Status.DRAFT,
@@ -216,8 +266,12 @@ class ProposalDraft(models.Model):
             amount_tax=self.tax_amount,
             amount_total=self.total,
             valid_until=valid_until,
-            customer_notes="",  # fill later if desired
+            customer_notes="",
             internal_notes=self.internal_notes,
+            deposit_type=self.deposit_type,
+            deposit_value=self.deposit_value,
+            deposit_amount=self.deposit_amount,
+            discount_total=self.discount_total,
         )
         # Copy selections to line items
         for sel in self.selections.all().order_by("sort_order", "pk"):
@@ -230,11 +284,47 @@ class ProposalDraft(models.Model):
                 unit_price=sel.unit_price,
                 subtotal=sel.extended_price,
             )
+        
+        for dd in self.discounts.all().order_by("sort_order", "id"):
+            ProposalAppliedDiscount.objects.create(
+                proposal=proposal,
+                discount_code=dd.discount.code,
+                name=dd.discount.name,
+                kind=dd.kind,
+                value=dd.value,
+                amount_applied=dd.amount_applied,
+                sort_order=dd.sort_order,
+            )
+
         self.status = self.Status.CONVERTED
         self.save(update_fields=["status", "updated_at"])
         ProposalEvent.objects.create(proposal=proposal, kind=ProposalEvent.Kind.CREATED, actor=created_by)
         return proposal
+    
+# -------------------- DRAFT DISCOUNTS (snapshot) --------------------
+class DraftDiscount(models.Model):
+    draft          = models.ForeignKey("ProposalDraft", on_delete=models.CASCADE, related_name="discounts")
+    discount       = models.ForeignKey(Discount, on_delete=models.PROTECT, related_name="draft_usages")
 
+    # Snapshot fields
+    kind           = models.CharField(max_length=10, choices=Discount.Kind.choices)
+    value          = models.DecimalField(max_digits=10, decimal_places=2)
+    amount_applied = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+
+    sort_order     = models.PositiveIntegerField(default=0)
+    notes          = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ("sort_order", "id")
+        unique_together = (("draft", "discount"),)
+
+    def __str__(self):
+        return f"{self.draft} · {self.discount.code}"
+
+    def compute_amount(self, *, base_subtotal: Decimal) -> Decimal:
+        if self.kind == Discount.Kind.PERCENT:
+            return (base_subtotal or Decimal("0.00")) * (self.value or Decimal("0.00")) / Decimal("100.00")
+        return self.value or Decimal("0.00")
 
 class DraftSelection(models.Model):
     """
@@ -313,6 +403,11 @@ class Proposal(models.Model):
         EXPIRED  = "EXPIRED",  "Expired"
         CANCELED = "CANCELED", "Canceled"
 
+    class DepositType(models.TextChoices):
+        NONE    = "NONE",    "None"
+        PERCENT = "PERCENT", "Percent of total"
+        FIXED   = "FIXED",   "Fixed amount"
+
     company      = models.ForeignKey("companyApp.Company", on_delete=models.CASCADE, related_name="proposals")
     created_by   = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="proposals_created")
     contact      = models.ForeignKey("companyApp.CompanyContact", on_delete=models.SET_NULL, null=True, blank=True, related_name="proposals_for_contact")
@@ -324,8 +419,14 @@ class Proposal(models.Model):
 
     amount_subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     amount_tax      = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+    discount_total = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     amount_total    = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     valid_until     = models.DateField(null=True, blank=True)
+
+    deposit_type   = models.CharField(max_length=10, choices=DepositType.choices, default=DepositType.NONE)
+    deposit_value  = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+    deposit_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+
 
     # Public signing link
     sign_token       = models.CharField(max_length=64, unique=True, editable=False)
@@ -424,6 +525,19 @@ class Proposal(models.Model):
             self.amount_subtotal = sub
             self.amount_total = sub + (self.amount_tax or Decimal("0.00"))
         super().save(*args, **kwargs)
+
+# -------------------- PROPOSAL DISCOUNTS (snapshot) --------------------
+class ProposalAppliedDiscount(models.Model):
+    proposal       = models.ForeignKey("Proposal", on_delete=models.CASCADE, related_name="applied_discounts")
+    discount_code  = models.SlugField(max_length=40)            # snapshot of Discount.code
+    name           = models.CharField(max_length=120)           # snapshot of Discount.name
+    kind           = models.CharField(max_length=10, choices=Discount.Kind.choices)
+    value          = models.DecimalField(max_digits=10, decimal_places=2)  # percent or fixed amount
+    amount_applied = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+    sort_order     = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ("sort_order", "id")
 
 
 class ProposalLineItem(models.Model):
