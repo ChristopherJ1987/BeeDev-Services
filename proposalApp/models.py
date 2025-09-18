@@ -178,6 +178,11 @@ class ProposalDraft(models.Model):
     estimate_low   = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     estimate_high  = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
 
+    estimate_manual = models.BooleanField(
+        default=False,
+        help_text="If checked, keep the selected tier and don't auto-update from totals."
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -215,18 +220,24 @@ class ProposalDraft(models.Model):
     
     def update_estimate_from_tiers(self, *, use_total=True, save=True):
         """
-        Pick a CostTier using the current draft totals and snapshot its range.
-        By default we use `total` (subtotal - discount). Adjust if you prefer.
+        If estimate_manual is True, keep the selected estimate_tier and just
+        refresh estimate_low/high from it. Otherwise, auto-pick the tier from totals.
         """
         amount = self.total if use_total else self.subtotal
-        tier = CostTier.for_amount(amount)
-        self.estimate_tier = tier
+
+        if self.estimate_manual and self.estimate_tier_id:
+            tier = self.estimate_tier  # respect manual choice
+        else:
+            tier = CostTier.for_amount(amount)
+            self.estimate_tier = tier  # auto-pick
+
         if tier:
             self.estimate_low = tier.min_total or Decimal("0.00")
-            self.estimate_high = tier.max_total or amount  # if open-ended, use current as 'up to' guide
+            self.estimate_high = tier.max_total or amount  # if open-ended, show current as an 'up to'
         else:
             self.estimate_low = Decimal("0.00")
             self.estimate_high = Decimal("0.00")
+
         if save:
             self.save(update_fields=["estimate_tier", "estimate_low", "estimate_high", "updated_at"])
         return tier

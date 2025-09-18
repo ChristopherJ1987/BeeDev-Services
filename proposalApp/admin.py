@@ -92,7 +92,10 @@ class ProposalDraftAdmin(admin.ModelAdmin):
     list_display = (
         "title", "company", "currency",
         "subtotal", "discount", "discount_amount",
-        "total", "estimate_tier", "estimate_low", "estimate_high", "deposit_type", "deposit_value", "deposit_amount",
+        "total",
+        "estimate_tier", "estimate_low", "estimate_high",
+        "estimate_manual",                      # NEW
+        "deposit_type", "deposit_value", "deposit_amount",
         "remaining_due", "created_at",
     )
     list_filter = ("company", "deposit_type", "created_at")
@@ -100,16 +103,9 @@ class ProposalDraftAdmin(admin.ModelAdmin):
     ordering = ("-created_at",)
 
     fieldsets = (
-        ("Header", {
-            "fields": ("company", "created_by", "title", "currency")
-        }),
-        ("Optional Contact", {
-            "fields": ("contact_name", "contact_email"),
-            "classes": ("collapse",)
-        }),
-        ("Discount", {
-            "fields": ("discount", "discount_amount"),
-        }),
+        ("Header", {"fields": ("company", "created_by", "title", "currency")}),
+        ("Optional Contact", {"fields": ("contact_name", "contact_email"), "classes": ("collapse",)}),
+        ("Discount", {"fields": ("discount", "discount_amount")}),
         ("Totals & Deposit", {
             "fields": (
                 ("subtotal", "total"),
@@ -118,15 +114,21 @@ class ProposalDraftAdmin(admin.ModelAdmin):
             )
         }),
         ("Estimated Tier", {
-            "fields": ("estimate_tier", ("estimate_low", "estimate_high")),
+            "fields": (
+                "estimate_manual",             # NEW toggle
+                "estimate_tier",
+                ("estimate_low", "estimate_high"),
+            ),
         }),
-        ("Timestamps", {
-            "fields": ("created_at", "updated_at"),
-            "classes": ("collapse",)
-        }),
+        ("Timestamps", {"fields": ("created_at", "updated_at"), "classes": ("collapse",)}),
     )
 
-    readonly_fields = ("subtotal", "discount_amount", "total", "deposit_amount", "remaining_due", "created_at", "updated_at")
+    readonly_fields = (
+        "subtotal", "discount_amount", "total",
+        "deposit_amount", "remaining_due",
+        "estimate_low", "estimate_high",
+        "created_at", "updated_at",
+    )
 
     actions = ["action_recalc_totals", "action_convert_to_proposal"]
 
