@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.urls import path, include, reverse_lazy
 from userApp import views as app_views
+from companyApp import views as app_views
+from proposalApp import views as app_views
 from django.contrib.auth import views as auth_views
 
 admin.site.site_header = "BeeDev Admin"
@@ -13,4 +15,10 @@ urlpatterns = [
     path('__reload__/', include('django_browser_reload.urls')),
     path('', include('userApp.urls')),
     path('admin/', admin.site.urls),
+    path('company/', include(('companyApp.urls_staff', 'company_staff'), namespace='company_staff')),
+    path('client/company/', include(('companyApp.urls_client', 'company_client'), 
+    namespace='company_client')),
+    path('proposals/', include(('proposalApp.urls_staff', 'proposal_staff'), namespace='proposals_staff')),
+    # path('client/company/', include(('companyApp.urls_client', 'company_client'), 
+    # namespace='company_client'))
 ]
