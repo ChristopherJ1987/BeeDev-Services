@@ -129,6 +129,12 @@ LOGIN_REDIRECT_URL = 'userApp:post_login'
 # LOGOUT_REDIRECT_URL = 'https://beedev-services.com/'
 LOGOUT_REDIRECT_URL = '/'
 PROSPECTS_CLIENT_MODEL = "companyApp.Company"
+# Base URL of your future signing page (view will look up Proposal by token)
+# PROPOSAL_SIGNING_URL_BASE = "https://portal.example.com/sign"
+# Dotted-callables (set now or later)
+PROPOSAL_ACCOUNT_CREATOR = "proposalApp.hooks:create_account_for_signed_proposal"
+PROPOSAL_INVOICE_CREATOR = "proposalApp.hooks:create_invoice_for_deposit"
+PROPOSAL_MESSENGER       = "proposalApp.hooks:send_proposal_email"
 
 
 # Internationalization
