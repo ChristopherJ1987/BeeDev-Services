@@ -26,11 +26,14 @@ def staff_home(request):
 
 @login_required
 def employee_home(request):
+    user = request.user
     if not (request.user.is_staff or getattr(request.user, "role", None) == "EMPLOYEE"):
         return redirect("userApp:client_home")
 
-    ctx = {}
-    ctx.update(base_ctx(request, title="Employee Dashboard"))
+    ctx = {"user_obj": user, "read_only": True}
+    title = "Dashboard"
+    ctx.update(base_ctx(request, title=title))
+    ctx['page_heading'] = title
     return render(request, "userApp/employee_home.html", ctx)
 
 @login_required
@@ -39,6 +42,7 @@ def client_home(request):
     ctx = {
         "user_name": u.get_full_name() or u.username,
     }
-    ctx.update(base_ctx(request, title="Dashboard"))
-    ctx['page_heading'] = 'Dashboard'
+    title = "Dashboard"
+    ctx.update(base_ctx(request, title=title))
+    ctx['page_heading'] = title
     return render(request, "userApp/client_home.html", ctx)

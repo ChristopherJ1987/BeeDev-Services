@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load page_title %}
+
+{% block content %}
+<h1 class="title">{{ heading|default:page_heading|default:title_short|default:"Untitled Page"|stylize_title:"altTitle" }}</h1>
+
+<div class="details">
+    <p>Company Name: {{company.name}}</p>
+    <p>Primary Contact Name: {{company.primary_contact_name}}</p>
+    <p>Primary Email: {{company.primary_email}}</p>
+</div>
+<div class="status">
+    <p>Current Client Status: {{company.status}}</p>
+    <p>Current Pipeline Status: {{company.pipeline_status}}</p>
+</div>
+
+{% endblock content %}

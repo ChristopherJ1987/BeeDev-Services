@@ -1,9 +1,13 @@
 {% extends "base.html" %}
-{% load i18n static %}
 {% load page_title %}
 
 {% block content %}
 <h1 class="title">{{ heading|default:page_heading|default:title_short|default:"Untitled Page"|stylize_title:"altTitle" }}</h1>
-<a href="/company/">Company List</a>
-<a href="/proposals/">Proposal List</a>
+
+<div class="details">
+    {% for d in drafts %}
+        <p>{{d.company}}</p>
+    {% endfor%}
+</div>
+
 {% endblock content %}
