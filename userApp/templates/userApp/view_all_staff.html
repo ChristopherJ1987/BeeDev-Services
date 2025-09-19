@@ -7,6 +7,7 @@
 
     <table>
         <tr>
+            <th>ID</th>
             <th>Role/Job</th>
             <th>Name</th>
             <th>Username</th>
@@ -14,6 +15,7 @@
         </tr>
         {% for s in staff %}
         <tr>
+            <td><a href="">{{s.id}}</a></td>
             <td>{{s.role}}</td>
             <td>{{s.first_name}} {{s.last_name}}</td>
             <td>{{s.username}}</td>

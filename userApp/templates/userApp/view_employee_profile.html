@@ -34,13 +34,33 @@
   </div>
   <div class="info">
     <h3>Job Information</h3>
-    <p>Job Title: {{profile.job_title}}</p>
-    <p>Email: {{profile.work_email}}</p>
-    <p>Phone: {{profile.work_phone}}</p>
-    <address>
-      {{profile.address_line1}} <br>
-      {{profile.address_line2}} <br>
-      {{profile.city}}, {{profile.state_region}} {{profile.postal_code}} {{profile.country}}
-    </address>
+    <table class="entry">
+      <tr>
+        <th>Job Title:</th>
+        <td>{{profile.job_title}}</td>
+      </tr>
+      <tr>
+        <th>Email:</th>
+        <td>{{profile.work_email}}</td>
+      </tr>
+      <tr>
+        <th>Phone:</th>
+        <td>{{profile.work_phone}}</td>
+      </tr>
+      <tr>
+        <th rowspan="3">Address</th>
+        {% if profile.city %}
+          {% if profile.address_line1 %}
+            <td><address>{{profile.address_line1}}</address></td>
+          {% endif %}
+          {% if profile.address_line2 %}
+            <td><address>{{profile.address_line2}}</address></td>
+          {% endif %}
+          <td><address>{{profile.city}}, {{profile.state_region}} {{profile.postal_code}} {{profile.country}}</address></td>
+        {% else %}
+        <td>No address on file</td>
+        {% endif %}
+      </tr>
+    </table>
   </div>
 {% endblock content %}
