@@ -1,0 +1,31 @@
+# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
+PassengerAppRoot "/home/thehives/public_html/beedev-portal"
+PassengerBaseURI "/"
+PassengerPython "/home/thehives/virtualenv/public_html/beedev-portal/3.10/bin/python"
+# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END
+# DO NOT REMOVE OR MODIFY. CLOUDLINUX ENV VARS CONFIGURATION BEGIN
+<IfModule Litespeed>
+</IfModule>
+# DO NOT REMOVE OR MODIFY. CLOUDLINUX ENV VARS CONFIGURATION END
+# --- Serve collected static from /staticfiles/ via /static/ URL ---
+RewriteEngine On
+
+# If the request starts with /static/, rewrite to staticfiles/ (relative path)
+RewriteRule ^static/(.*)$ staticfiles/$1 [L]
+
+# Optional: add long cache headers for static
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType text/css "access plus 30 days"
+  ExpiresByType application/javascript "access plus 30 days"
+  ExpiresByType image/png "access plus 30 days"
+  ExpiresByType image/jpeg "access plus 30 days"
+  ExpiresByType image/webp "access plus 30 days"
+  ExpiresByType image/svg+xml "access plus 30 days"
+  ExpiresDefault "access plus 7 days"
+</IfModule>
+
+# Make sure static files are always allowed (not routed to Passenger)
+<FilesMatch "\.(css|js|png|jpg|jpeg|webp|svg|gif|ico|woff2?|ttf|eot)$">
+  Require all granted
+</FilesMatch>

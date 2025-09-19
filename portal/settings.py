@@ -20,7 +20,6 @@ ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[
     'localhost', '127.0.0.1',
     'portal.beedev-services.com',
 ])
-
 CSRF_TRUSTED_ORIGINS = [
     'https://beedev-services.com',
     'https://www.beedev-services.com',
@@ -96,14 +95,13 @@ DATABASES = {
     'default': {
         # 'ENGINE': 'mysql.connector.django',
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'thehives_beedev_portal',
-        'USER': 'root',
-        'PASSWORD': 'HoneyBee#4',
+        'NAME': env('DB_NAME'),
+        'USER': env('DB_USER'),
+        'PASSWORD': env('DB_PASSWORD'),
         'HOST': 'localhost',
         'PORT': '3306',
     }
 }
-
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
