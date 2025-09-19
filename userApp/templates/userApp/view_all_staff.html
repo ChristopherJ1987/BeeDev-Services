@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load i18n static %}
+{% load page_title %}
+
+{% block content %}
+    <h1 class="title">{{ heading|default:page_heading|default:title_short|default:"Untitled Page"|stylize_title:"altTitle" }}</h1>
+
+    <table>
+        <tr>
+            <th>Role/Job</th>
+            <th>Name</th>
+            <th>Username</th>
+            <th>Email</th>
+        </tr>
+        {% for s in staff %}
+        <tr>
+            <td>{{s.role}}</td>
+            <td>{{s.first_name}} {{s.last_name}}</td>
+            <td>{{s.username}}</td>
+            <td>{{s.email}}</td>
+        </tr>
+        {% endfor%}
+    </table>
+
+{% endblock content %}

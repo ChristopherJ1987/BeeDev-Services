@@ -5,6 +5,8 @@ from companyApp import views as app_views
 from proposalApp import views as app_views
 from django.contrib.auth import views as auth_views
 
+handler403 = "core.views.custom_permission_denied_view"
+
 admin.site.site_header = "BeeDev Admin"
 admin.site.site_title = "BeeDev Admin"
 admin.site.index_title = "BeeDev Administration"
