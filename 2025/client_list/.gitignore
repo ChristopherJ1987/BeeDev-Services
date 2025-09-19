@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+yelp_*.csv
+leads_*.csv
