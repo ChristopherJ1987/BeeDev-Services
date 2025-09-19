@@ -1,7 +1,8 @@
 @import '../root/root.less';
 
 body {
-    
+    background-color: var(--background);
+
     #container {
         background-color: var(--background);
         color: var(--black);
@@ -60,6 +61,7 @@ body {
                 align-items: flex-start;
                 justify-content: flex-start;
                 width: 100%;
+                background-color: var(--background);
 
                 .colMS {
                     h1 {
@@ -158,6 +160,23 @@ body {
                             }
                         }
                     }
+                }
+            }
+        }
+        #footer {
+            .flexrow();
+            background-color: var(--black);
+            color: var(--yellow);
+            padding: 2em;
+
+            .beedev-admin-footer {
+                .flexrow();
+
+                span {
+                    margin: 0 1em;
+                }
+                a {
+                    margin: 0 1em;
                 }
             }
         }

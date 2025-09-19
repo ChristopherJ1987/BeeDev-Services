@@ -1,0 +1,64 @@
+:root {
+  --yellow: #F3DB18;
+  --black: #000000;
+  --background: #F7F6F0;
+  --white: #F5F5F5;
+  --green: #426e54;
+}
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  font-family: 'Source Sans Pro', sans-serif;
+  font-display: swap;
+}
+.flexrow {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+.flexcolumn {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+body main {
+  width: 95%;
+}
+body main .list_menu {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+body main .list_menu a {
+  margin: 1em;
+}
+body main .info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  align-items: flex-start;
+  margin: 0 0 1em 0;
+  width: 50%;
+}
+body main .info h3 {
+  text-align: center;
+  background-color: var(--green);
+  color: var(--white);
+  width: 100%;
+  padding: 1em;
+  margin-bottom: 0.5em;
+}
+body main .info .entry {
+  width: 100%;
+}
+body main .info .entry th,
+body main .info .entry td {
+  width: 50%;
+  text-align: left;
+  padding-left: 0.5em;
+}

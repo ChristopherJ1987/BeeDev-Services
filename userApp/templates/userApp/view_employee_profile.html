@@ -1,15 +1,36 @@
 {% extends "base.html" %}
+{% load i18n static %}
 {% load page_title %}
 
 {% block content %}
+    <head>
+        <link rel="stylesheet" href="{% static 'css/user.css'%}?v={% now 'U' %}">
+    </head>
   <h1 class="title">{{ heading|default:page_heading|default:title_short|default:"Untitled Page"|stylize_title:"altTitle" }}</h1>
   <div class="info">
     <h3>Your information:</h3>
-    <p>First Name: {{user.first_name}}</p>
-    <p>Last Name: {{user.last_name}}</p>
-    <p>Username: {{user.username}}</p>
-    <p>Email: {{user.email}}</p>
-    <p>Discord: {{profile.discord_handle}}</p>
+    <table class="entry">
+      <tr>
+        <th>First Name:</th>
+        <td>{{user.first_name}}</td>
+      </tr>
+      <tr>
+        <th>Last Name:</th>
+        <td>{{user.last_name}}</td>
+      </tr>
+      <tr>
+        <th>Username:</th>
+        <td>{{user.username}}</td>
+      </tr>
+      <tr>
+        <th>Email:</th>
+        <td>{{user.email}}</td>
+      </tr>
+      <tr>
+        <th>Discord:</th>
+        <td>{{profile.discord_handle}}</td>
+      </tr>
+    </table>
   </div>
   <div class="info">
     <h3>Job Information</h3>
