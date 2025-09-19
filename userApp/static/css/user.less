@@ -1,0 +1,39 @@
+@import './root/root.less';
+
+body {
+    main {
+        width: 95%;
+
+        .list_menu {
+            .flexcolumn();
+            
+            a {
+                margin: 1em;
+            }
+        }
+        .info {
+            .flexcolumn();
+            align-items: flex-start;
+            margin: 0 0 1em 0;
+            width: 50%;
+
+            h3 {
+                text-align: center;
+                background-color: var(--green);
+                color: var(--white);
+                width: 100%;
+                padding: 1em;
+                margin-bottom: .5em;
+            }
+            .entry {
+                width: 100%;
+
+                th, td {
+                    width: 50%;
+                    text-align: left;
+                    padding-left: .5em;
+                }
+            }
+        }
+    }
+}

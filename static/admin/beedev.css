@@ -24,6 +24,9 @@
   justify-content: center;
   align-items: center;
 }
+body {
+  background-color: var(--background);
+}
 body #container {
   background-color: var(--background);
   color: var(--black);
@@ -79,6 +82,7 @@ body #container .main .content {
   align-items: flex-start;
   justify-content: flex-start;
   width: 100%;
+  background-color: var(--background);
 }
 body #container .main .content .colMS h1 {
   color: var(--black);
@@ -146,4 +150,25 @@ body #container .main .sticky .module table tbody tr th a,
 body #container .main .sticky .module table tbody tr td a {
   color: var(--yellow);
   font-size: 1rem;
+}
+body #container #footer {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--black);
+  color: var(--yellow);
+  padding: 2em;
+}
+body #container #footer .beedev-admin-footer {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+body #container #footer .beedev-admin-footer span {
+  margin: 0 1em;
+}
+body #container #footer .beedev-admin-footer a {
+  margin: 0 1em;
 }
