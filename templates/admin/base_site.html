@@ -1,8 +1,9 @@
 {% extends "admin/base.html" %}
+{% load static i18n %}
 {% load static %}
 
 {# Page <title> shown in the browser tab #}
-{% block title %}BeeDev Services — Portal Admin{% endblock %}
+{% block title %}BeeDev Services — {{user.role}} Admin Portal{% endblock %}
 
 {# Add your brand CSS on every admin page #}
 {% block extrastyle %}
@@ -15,9 +16,14 @@
   <h1 class="admin_header">
     <a href="{% url 'admin:index' %}">
       <img src="{% static 'admin/logo.png' %}" alt="" style="height:50px;vertical-align:middle;margin-right:8px;">
-      BeeDev Services — Portal Admin
+      BeeDev Services — {{user.role}} Admin Portal
     </a>
   </h1>
+{% endblock %}
+
+{% block welcome-msg %}
+  {% translate "Welcome," %} 
+  <strong>{% firstof user.preferred_name user.first_name user.get_username %}</strong>.
 {% endblock %}
 
 {# Optional: hide the global top-right nav if you want it cleaner #}

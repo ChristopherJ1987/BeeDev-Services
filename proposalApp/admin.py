@@ -19,6 +19,19 @@ from .models import (
     CostTier,
 )
 
+# -------- permission helpers --------
+def is_owner(u):
+    return u.is_active and (u.is_superuser or u.groups.filter(name="Owner").exists())
+
+def is_admin(u):
+    return u.is_active and u.groups.filter(name="Admin").exists()
+
+def is_hr(u):
+    return u.is_active and u.groups.filter(name="HR").exists()
+
+def is_plain_staff(u):
+    return u.is_active and u.is_staff and not is_owner(u) and not is_admin(u) and not is_hr(u)
+
 # ---------------------------
 # Reference/Admin catalogs
 # ---------------------------
@@ -30,6 +43,19 @@ class JobRateAdmin(admin.ModelAdmin):
     search_fields = ("name", "code")
     ordering = ("sort_order", "name")
 
+    # ----- permissions -----    
+    def has_view_permission(self, request, obj=None):
+        return is_owner(request.user) or is_admin(request.user)
+
+    def has_add_permission(self, request):
+        return is_owner(request.user) or is_admin(request.user)
+    
+    def has_change_permission(self, request, obj=None):
+        return is_owner(request.user) or is_admin(request.user)
+
+    def has_delete_permission(self, request, obj=None):
+        return is_owner(request.user) or is_admin(request.user)
+
 
 @admin.register(BaseSetting)
 class BaseSettingAdmin(admin.ModelAdmin):
@@ -38,6 +64,19 @@ class BaseSettingAdmin(admin.ModelAdmin):
     search_fields = ("name", "code")
     ordering = ("sort_order", "name")
 
+    # ----- permissions -----
+    def has_view_permission(self, request, obj=None):
+        return is_owner(request.user) or is_admin(request.user)
+
+    def has_add_permission(self, request):
+        return is_owner(request.user) or is_admin(request.user)
+    
+    def has_change_permission(self, request, obj=None):
+        return is_owner(request.user) or is_admin(request.user)
+
+    def has_delete_permission(self, request, obj=None):
+        return is_owner(request.user) or is_admin(request.user)
+
 
 @admin.register(Discount)
 class DiscountAdmin(admin.ModelAdmin):
@@ -45,6 +84,26 @@ class DiscountAdmin(admin.ModelAdmin):
     list_filter  = ("is_active", "kind")
     search_fields = ("name", "code")
     ordering = ("code",)
+
+    # ----- permissions -----
+    def has_module_permission(self, request):
+        if is_hr(request.user) or not request.user.is_staff:
+            return False
+        return True
+    
+    def has_view_permission(self, request, obj=None):
+        return self.has_module_permission(request)
+
+    def has_add_permission(self, request):
+        return is_owner(request.user) or is_admin(request.user)
+    
+    def has_change_permission(self, request, obj=None):
+        if is_owner(request.user) or is_admin(request.user):
+            return True
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return is_owner(request.user) or is_admin(request.user)
 
 
 @admin.register(CatalogItem)
@@ -55,12 +114,52 @@ class CatalogItemAdmin(admin.ModelAdmin):
     ordering      = ("sort_order", "name")
     autocomplete_fields = ("job_rate", "base_setting")
 
+    # ----- permissions -----
+    def has_module_permission(self, request):
+        if is_hr(request.user) or not request.user.is_staff:
+            return False
+        return True
+    
+    def has_view_permission(self, request, obj=None):
+        return self.has_module_permission(request)
+
+    def has_add_permission(self, request):
+        return is_owner(request.user) or is_admin(request.user)
+    
+    def has_change_permission(self, request, obj=None):
+        if is_owner(request.user) or is_admin(request.user):
+            return True
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return is_owner(request.user) or is_admin(request.user)
+
 @admin.register(CostTier)
 class CostTierAdmin(admin.ModelAdmin):
     list_display  = ("label", "code", "min_total", "max_total", "is_active", "sort_order")
     list_filter   = ("is_active",)
     search_fields = ("label", "code", "notes")
     ordering      = ("sort_order", "min_total")
+
+    # ----- permissions -----
+    def has_module_permission(self, request):
+        if is_hr(request.user) or not request.user.is_staff:
+            return False
+        return True
+    
+    def has_view_permission(self, request, obj=None):
+        return self.has_module_permission(request)
+
+    def has_add_permission(self, request):
+        return is_owner(request.user) or is_admin(request.user)
+    
+    def has_change_permission(self, request, obj=None):
+        if is_owner(request.user) or is_admin(request.user):
+            return True
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return is_owner(request.user) or is_admin(request.user)
 
 
 # ---------------------------

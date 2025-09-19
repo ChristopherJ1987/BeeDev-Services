@@ -33,10 +33,10 @@ class CompanyContactInline(admin.TabularInline):
     readonly_fields = ("created_at", "updated_at")
 
     def has_add_permission(self, request, obj):
-        return is_owner(request.user) or is_admin(request.user) or is_hr(request.user)
+        return is_owner(request.user) or is_admin(request.user)
 
     def has_change_permission(self, request, obj=None):
-        return is_owner(request.user) or is_admin(request.user) or is_hr(request.user)
+        return is_owner(request.user) or is_admin(request.user)
 
     def has_delete_permission(self, request, obj=None):
         return is_owner(request.user) or is_admin(request.user)
@@ -53,10 +53,10 @@ class CompanyLinkInline(admin.TabularInline):
     readonly_fields = ("created_at", "updated_at")
 
     def has_add_permission(self, request, obj):
-        return is_owner(request.user) or is_admin(request.user) or is_hr(request.user)
+        return is_owner(request.user) or is_admin(request.user)
 
     def has_change_permission(self, request, obj=None):
-        return is_owner(request.user) or is_admin(request.user) or is_hr(request.user)
+        return is_owner(request.user) or is_admin(request.user)
 
     def has_delete_permission(self, request, obj=None):
         return is_owner(request.user) or is_admin(request.user)
@@ -178,8 +178,9 @@ class CompanyAdmin(admin.ModelAdmin):
 
     # ----- permissions -----
     def has_module_permission(self, request):
-        # any staff can access the Company module
-        return request.user.is_staff
+        if is_hr(request.user) or not request.user.is_staff:
+            return False
+        return True
 
     def has_view_permission(self, request, obj=None):
         return self.has_module_permission(request)
@@ -190,7 +191,7 @@ class CompanyAdmin(admin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         # Owner/Admin can change; HR can change; plain staff read-only
-        if is_owner(request.user) or is_admin(request.user) or is_hr(request.user):
+        if is_owner(request.user) or is_admin(request.user):
             return True
         return False
 
@@ -218,10 +219,10 @@ class CompanyContactAdmin(admin.ModelAdmin):
         return request.user.is_staff
 
     def has_add_permission(self, request):
-        return is_owner(request.user) or is_admin(request.user) or is_hr(request.user)
+        return is_owner(request.user) or is_admin(request.user)
 
     def has_change_permission(self, request, obj=None):
-        return is_owner(request.user) or is_admin(request.user) or is_hr(request.user)
+        return is_owner(request.user) or is_admin(request.user)
 
     def has_delete_permission(self, request, obj=None):
         return is_owner(request.user) or is_admin(request.user)
@@ -247,10 +248,10 @@ class CompanyLinkAdmin(admin.ModelAdmin):
         return request.user.is_staff
 
     def has_add_permission(self, request):
-        return is_owner(request.user) or is_admin(request.user) or is_hr(request.user)
+        return is_owner(request.user) or is_admin(request.user)
 
     def has_change_permission(self, request, obj=None):
-        return is_owner(request.user) or is_admin(request.user) or is_hr(request.user)
+        return is_owner(request.user) or is_admin(request.user)
 
     def has_delete_permission(self, request, obj=None):
         return is_owner(request.user) or is_admin(request.user)
