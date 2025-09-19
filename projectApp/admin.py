@@ -89,7 +89,7 @@ class ProjectUpdateInline(admin.StackedInline):
     autocomplete_fields = ("created_by",)
     show_change_link = True
     inlines = [ProjectUpdateAttachmentInline]  # NOTE: nested inlines are not supported by Django admin.
-                                               # Attachments will be edited on the update detail page.
+    # Attachments will be edited on the update detail page.
 
     def has_delete_permission(self, request, obj=None):
         return is_owner(request.user) or is_admin(request.user)
@@ -163,7 +163,10 @@ class ProjectUpdateAdmin(admin.ModelAdmin):
     inlines = [ProjectUpdateAttachmentInline]
     readonly_fields = ("posted_at",)
 
-    def has_module_permission(self, request): return request.user.is_staff
+    def has_module_permission(self, request):
+        if is_hr(request.user) or not request.user.is_staff:
+            return False
+        return True
     def has_add_permission(self, request): return can_edit(request.user)
     def has_change_permission(self, request, obj=None): return can_edit(request.user)
     def has_delete_permission(self, request, obj=None): return is_owner(request.user) or is_admin(request.user)

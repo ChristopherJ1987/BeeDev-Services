@@ -18,7 +18,7 @@ def is_hr(u):
     return u.is_active and u.groups.filter(name="HR").exists()
 
 def can_edit(u):
-    return is_owner(u) or is_admin(u) or is_hr(u)
+    return is_owner(u) or is_admin(u)
 
 
 # ============================ Inlines ============================
@@ -66,8 +66,7 @@ class TicketAdmin(admin.ModelAdmin):
         "attention_flag",
     )
     list_filter   = ("status", "priority", "category")
-    search_fields = ("public_key", "subject", "description", "company__name", "project__name",
-                     "assigned_to__username", "customer_user__username")
+    search_fields = ("public_key", "subject", "description", "company__name", "project__name", "assigned_to__username", "customer_user__username")
     autocomplete_fields = ("company", "project", "customer_user", "created_by", "assigned_to", "watchers")
 
     # IMPORTANT: remove TicketAttachmentInline here (no FK to Ticket)
@@ -111,8 +110,8 @@ class TicketAdmin(admin.ModelAdmin):
 
     # permissions (as before)
     def has_module_permission(self, request): return request.user.is_staff
-    def has_add_permission(self, request): return is_owner(request.user) or is_admin(request.user) or is_hr(request.user)
-    def has_change_permission(self, request, obj=None): return is_owner(request.user) or is_admin(request.user) or is_hr(request.user)
+    def has_add_permission(self, request): return is_owner(request.user) or is_admin(request.user)
+    def has_change_permission(self, request, obj=None): return is_owner(request.user) or is_admin(request.user)
     def has_delete_permission(self, request, obj=None): return is_owner(request.user) or is_admin(request.user)
 
     # actions (unchanged)
@@ -169,8 +168,8 @@ class TicketMessageAdmin(admin.ModelAdmin):
     inlines = [TicketAttachmentInline]   # ← attachments live here
 
     def has_module_permission(self, request): return request.user.is_staff
-    def has_add_permission(self, request): return is_owner(request.user) or is_admin(request.user) or is_hr(request.user)
-    def has_change_permission(self, request, obj=None): return is_owner(request.user) or is_admin(request.user) or is_hr(request.user)
+    def has_add_permission(self, request): return is_owner(request.user) or is_admin(request.user)
+    def has_change_permission(self, request, obj=None): return is_owner(request.user) or is_admin(request.user)
     def has_delete_permission(self, request, obj=None): return is_owner(request.user) or is_admin(request.user)
 
 
@@ -182,7 +181,10 @@ class TicketAttachmentAdmin(admin.ModelAdmin):
     autocomplete_fields = ("message",)
     readonly_fields = ("uploaded_at",)
 
-    def has_module_permission(self, request): return request.user.is_staff
+    def has_module_permission(self, request):
+        if is_hr(request.user) or not request.user.is_staff:
+            return False
+        return True
     def has_add_permission(self, request): return can_edit(request.user)
     def has_change_permission(self, request, obj=None): return can_edit(request.user)
     def has_delete_permission(self, request, obj=None): return is_owner(request.user) or is_admin(request.user)
