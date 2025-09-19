@@ -29,6 +29,8 @@ def employee_home(request):
     user = request.user
     if not (request.user.is_staff or getattr(request.user, "role", None) == "EMPLOYEE"):
         return redirect("userApp:client_home")
+    
+    print('user.role', user.role)
 
     ctx = {"user_obj": user, "read_only": True}
     title = "Dashboard"

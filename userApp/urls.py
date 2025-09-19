@@ -17,6 +17,7 @@ urlpatterns = [
 
     # || Staff/Employee Links ||
     path("staff/", staff_home, name="staff_home"),
+    path("staff/list", view_all_staff, name="view_all_staff"),
     path("employee/", employee_home, name="employee_home"),
     path("employee/profile", view_employee_profile, name="view_employee_profile"),
 
