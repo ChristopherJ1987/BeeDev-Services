@@ -4,7 +4,9 @@ asgiref==3.9.1
 asttokens==3.0.0
 bcrypt==4.3.0
 certifi==2025.8.3
+cffi==2.0.0
 charset-normalizer==3.4.3
+cryptography==46.0.1
 decorator==5.2.1
 Django==5.2.5
 django-browser-reload==1.18.0
@@ -25,6 +27,7 @@ pillow==11.3.0
 prompt_toolkit==3.0.51
 ptyprocess==0.7.0
 pure_eval==0.2.3
+pycparser==2.23
 pydantic==2.11.7
 pydantic_core==2.33.2
 Pygments==2.19.2
