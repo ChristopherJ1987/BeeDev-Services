@@ -1,0 +1,60 @@
+:root {
+  --yellow: #F3DB18;
+  --black: #000000;
+  --background: #F7F6F0;
+  --white: #F5F5F5;
+  --green: #426e54;
+}
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  font-family: 'Source Sans Pro', sans-serif;
+  font-display: swap;
+}
+.flexrow {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+.flexcolumn {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+body main .mini_menu {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  justify-content: space-evenly;
+  width: 100%;
+  margin-bottom: 1em;
+}
+body main .search_bar {
+  margin-bottom: 1em;
+}
+body main table {
+  width: 50%;
+  margin: 1em;
+}
+body main table tr th {
+  text-align: center;
+  background-color: var(--green);
+  color: var(--white);
+  padding: 1em;
+  font-size: 1.2em;
+}
+body main .details {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  align-items: flex-start;
+}
+body main .details p {
+  font-size: 1.1em;
+  margin: 1em;
+}

@@ -1,0 +1,36 @@
+@import './root/root.less';
+
+body {
+    main {
+        .mini_menu {
+            .flexrow();
+            justify-content: space-evenly;
+            width: 100%;
+            margin-bottom: 1em;
+        }
+        .search_bar {
+            margin-bottom: 1em;;
+        }
+        table {
+            width: 50%;
+            margin: 1em;
+            tr {
+                th {
+                    text-align: center;
+                    background-color: var(--green);
+                    color: var(--white);
+                    padding: 1em;
+                    font-size: 1.2em;
+                }
+            }
+        }
+        .details {
+            .flexcolumn();
+            align-items: flex-start;
+            p {
+                font-size: 1.1em;
+                margin: 1em;
+            }
+        }
+    }
+}
