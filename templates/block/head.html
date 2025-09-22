@@ -12,7 +12,8 @@
         <link rel="stylesheet" href="{% static 'css/rootSite.css'%}?v={% now 'U' %}">
         <title>{{title.title}} - BeeDev Services</title>
     </head>
-    {% load django_browser_reload %}
-    {% django_browser_reload_script %}
+    {% if DEBUG %}
+        {% include "block/browser_reload.html" %}
+    {% endif %}
     {% endblock head %}
 </html>
