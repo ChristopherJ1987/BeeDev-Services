@@ -2,6 +2,7 @@
 from typing import Optional, Dict, Any
 from django.utils import timezone
 from django.db.models import Q
+from django.conf import settings
 
 DEFAULT_SITE_SUFFIX = "BeeDev Services"
 
@@ -84,6 +85,7 @@ def base_ctx(
         "marquee_list": marquee_list,
         "app_version": app_version,
         "app_version_obj": app_version_obj,
+        "DEBUG": settings.DEBUG,
     }
     ctx.update(extra)
     return ctx
