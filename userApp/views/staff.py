@@ -12,7 +12,6 @@ def view_all_staff(request):
         raise PermissionDenied("Not allowed")
     
     staff = User.objects.all()
-    print('staff', staff)
     title = 'Staff List'
     ctx = {"user_obj": user, "staff": staff}
     ctx.update(base_ctx(request, title=title))
@@ -27,4 +26,9 @@ def view_staff_profile(request, pk: int):
         raise PermissionDenied("Not allowed")
     
     staff = get_object_or_404(User, pk=pk)
-    pass
+    profile = get_object_or_404(EmployeeProfile, user=staff)
+    title = f"{staff.preferred_name} Profile"
+    ctx = {"staff": staff, "profile": profile}
+    ctx.update(base_ctx(request, title=title))
+    ctx["page_heading"] = title
+    return render(request, "userApp/view_staff_profile.html", ctx)

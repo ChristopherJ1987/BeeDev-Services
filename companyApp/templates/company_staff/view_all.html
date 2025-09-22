@@ -3,7 +3,7 @@
 
 {% block content %}
 <h1 class="title">{{ heading|default:page_heading|default:title_short|default:"Untitled Page"|stylize_title:"altTitle" }}</h1>
-
+<h2><a href="{% url 'userApp:employee_home' %}">Dashboard</a></h2>
 <form method="get">
   <input name="q" value="{{ request.GET.q }}" placeholder="Search companies…" />
   <button>Search</button>

@@ -3,6 +3,8 @@
 
 {% block content %}
 <h1 class="title">{{ heading|default:page_heading|default:title_short|default:"Untitled Page"|stylize_title:"altTitle" }}</h1>
+<h2><a href="{% url 'userApp:employee_home' %}">Dashboard</a></h2>
+<h2><a href="{% url 'company_staff:view_all_companies' %}">Company List</a></h2>
 
 <div class="details">
     <p>Company Name: {{company.name}}</p>

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load page_title %}
+
+{% block content %}
+<h1 class="title">{{ heading|default:page_heading|default:title_short|default:"Untitled Page"|stylize_title:"altTitle" }}</h1>
+<h2><a href="{% url 'userApp:employee_home' %}">Dashboard</a></h2>
+<h2><a href="{% url 'proposal_staff:view_all_drafts' %}">Draft List</a></h2>
+<div class="detail">
+    <h3>{{draft.title}}</h3>
+    <table class="entry">
+        <tr>
+            <th>Company Name</th>
+            <td>{{draft.company}}</td>
+        </tr>
+        <tr>
+            <th>Contact</th>
+            <td>{{draft.contact_name}}</td>
+        </tr>
+        <tr>
+            <th>Email</th>
+            <td>{{draft.contact_email}}</td>
+        </tr>
+    </table>
+</div>
+<div class="detail">
+    <h3>Estimates</h3>
+    <table class="entry">
+        <tr>
+            <th>Estimate Tier</th>
+            <td>{{draft.estimate_tier_id}} {{draft.estimate_low}} - {{draft.estimate_high}}</td>
+        </tr>
+        <tr>
+            <th>Discount</th>
+            <td>{{draft.discount}}</td>
+        </tr>
+        <tr>
+            <th>Total</th>
+            <td>{{draft.total}}</td>
+        </tr>
+    </table>
+</div>
+{% if items %}
+    <div class="detail">
+        <h3>Draft Items</h3>
+        <table class="entry">
+            <tr>
+                <th>Name</th>
+                <th>Quantity</th>
+                <th>Total</th>
+            </tr>
+            {% for i in items %}
+                <tr>
+                    <td>{{i.name}}</td>
+                    <td>{{i.quantity}}</td>
+                    <td>{{i.line_total}}</td>
+                </tr>
+            {% endfor %}
+            <tr>
+                <td colspan="2">Subtotal</td>
+                <td><td>{{draft.subtotal}}</td></td>
+            </tr>
+        </table>
+    </div>
+{% endif %}
+
+{% endblock content %}
