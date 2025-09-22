@@ -16,7 +16,6 @@ def view_client_profile(request):
         "profile": profile,
     }
 
-    print(user)
     ctx.update(base_ctx(request, title=title))
     ctx["page_heading"] = title
 

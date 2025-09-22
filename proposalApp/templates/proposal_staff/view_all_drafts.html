@@ -3,11 +3,27 @@
 
 {% block content %}
 <h1 class="title">{{ heading|default:page_heading|default:title_short|default:"Untitled Page"|stylize_title:"altTitle" }}</h1>
+<h2><a href="{% url 'userApp:employee_home' %}">Dashboard</a></h2>
 
-<div class="details">
+<table>
+    <tr>
+        <th>Draft Title</th>
+        <th>Company Name</th>
+        <th>Estimate Tier</th>
+        <th>Draft Total</th>
+    </tr>
     {% for d in drafts %}
-        <p>{{d.company}}</p>
+        <tr>
+            <td><a href="{% url 'proposal_staff:detail' d.pk %}">{{d.title}}</a></td>
+            <td>{{d.company}}</td>
+            <td>{{d.estimate_low}} - {{d.estimate_high}}</td>
+            <td>{{d.total}}</td>
+        </tr>
+    {% empty %}
+    <tr>
+        <td>No companies found</td>
+    </tr>
     {% endfor%}
-</div>
+</table>
 
 {% endblock content %}

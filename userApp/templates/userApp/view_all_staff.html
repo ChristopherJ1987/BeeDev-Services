@@ -4,7 +4,7 @@
 
 {% block content %}
     <h1 class="title">{{ heading|default:page_heading|default:title_short|default:"Untitled Page"|stylize_title:"altTitle" }}</h1>
-
+    <h2><a href="{% url 'userApp:employee_home' %}">Dashboard</a></h2>
     <table>
         <tr>
             <th>ID</th>
@@ -15,7 +15,7 @@
         </tr>
         {% for s in staff %}
         <tr>
-            <td><a href="">{{s.id}}</a></td>
+            <td><a href="{% url 'userApp:profile_detail' s.pk %}">{{s.id}}</a></td>
             <td>{{s.role}}</td>
             <td>{{s.first_name}} {{s.last_name}}</td>
             <td>{{s.username}}</td>

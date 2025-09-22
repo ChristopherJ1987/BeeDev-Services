@@ -10,7 +10,7 @@ app_name = "proposal_staff"
 
 urlpatterns = [
     path('', views.view_all_drafts, name='view_all_drafts'),
-    # path('<int:pk>/', views.view_one, name='detail'),
+    path('<int:pk>/', views.view_draft_detail, name='detail'),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
