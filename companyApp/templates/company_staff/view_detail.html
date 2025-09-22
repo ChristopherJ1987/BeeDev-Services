@@ -1,17 +1,23 @@
 {% extends "base.html" %}
+{% load i18n static %}
 {% load page_title %}
 
 {% block content %}
+  <head>
+    <link rel="stylesheet" href="{% static 'css/company.css'%}?v={% now 'U' %}">
+  </head>
 <h1 class="title">{{ heading|default:page_heading|default:title_short|default:"Untitled Page"|stylize_title:"altTitle" }}</h1>
-<h2><a href="{% url 'userApp:employee_home' %}">Dashboard</a></h2>
-<h2><a href="{% url 'company_staff:view_all_companies' %}">Company List</a></h2>
+<div class="mini_menu">
+    <h2><a href="{% url 'userApp:employee_home' %}">Dashboard</a></h2>
+    <h2><a href="{% url 'company_staff:view_all_companies' %}">Company List</a></h2>
+</div>
 
 <div class="details">
     <p>Company Name: {{company.name}}</p>
     <p>Primary Contact Name: {{company.primary_contact_name}}</p>
     <p>Primary Email: {{company.primary_email}}</p>
 </div>
-<div class="status">
+<div class="details">
     <p>Current Client Status: {{company.status}}</p>
     <p>Current Pipeline Status: {{company.pipeline_status}}</p>
 </div>

@@ -244,6 +244,7 @@ body {
     }
     main {
         .flexcolumn();
+        width: 100%;
         
         .title {
                 text-align: center;
@@ -278,7 +279,12 @@ body {
         }
     }
     footer {
-        .flexrow();
+        .flexcolumn();
+        justify-self: flex-end;
+
+        span {
+            font-size: .6em;
+        }
     }
 }
 

@@ -272,6 +272,7 @@ body main {
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  width: 100%;
 }
 body main .title {
   text-align: center;
@@ -308,7 +309,11 @@ body main .login .login-form {
 }
 body footer {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
+  justify-self: flex-end;
+}
+body footer span {
+  font-size: 0.6em;
 }

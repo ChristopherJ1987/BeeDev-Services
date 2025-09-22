@@ -34,6 +34,7 @@ def employee_home(request):
     title = "Dashboard"
     ctx.update(base_ctx(request, title=title))
     ctx['page_heading'] = title
+    print(ctx)
     return render(request, "userApp/employee_home.html", ctx)
 
 @login_required
