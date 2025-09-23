@@ -1,10 +1,16 @@
 {% extends "base.html" %}
+{% load i18n static %}
 {% load page_title %}
 
 {% block content %}
+  <head>
+    <link rel="stylesheet" href="{% static 'css/proposal.css'%}?v={% now 'U' %}">
+  </head>
 <h1 class="title">{{ heading|default:page_heading|default:title_short|default:"Untitled Page"|stylize_title:"altTitle" }}</h1>
-<h2><a href="{% url 'userApp:employee_home' %}">Dashboard</a></h2>
-<h2><a href="{% url 'proposal_staff:view_all_drafts' %}">Draft List</a></h2>
+<div class="mini_menu">
+    <h2><a href="{% url 'userApp:employee_home' %}">Dashboard</a></h2>
+    <h2><a href="{% url 'proposal_staff:view_all_drafts' %}">Draft List</a></h2>
+</div>
 <div class="detail">
     <h3>{{draft.title}}</h3>
     <table class="entry">
@@ -14,11 +20,19 @@
         </tr>
         <tr>
             <th>Contact</th>
-            <td>{{draft.contact_name}}</td>
+            {% if draft.contact_name %}
+                <td>{{draft.contact_name}}</td>
+            {% else %}
+                <td>TBD</td>
+            {% endif %}
         </tr>
         <tr>
             <th>Email</th>
-            <td>{{draft.contact_email}}</td>
+            {% if draft.contact_email %}
+                <td>{{draft.contact_email}}</td>
+            {% else %}
+                <td>TBD</td>
+            {% endif %}
         </tr>
     </table>
 </div>
@@ -27,7 +41,7 @@
     <table class="entry">
         <tr>
             <th>Estimate Tier</th>
-            <td>{{draft.estimate_tier_id}} {{draft.estimate_low}} - {{draft.estimate_high}}</td>
+            <td>#{{draft.estimate_tier_id}} (${{draft.estimate_low}} - ${{draft.estimate_high}})</td>
         </tr>
         <tr>
             <th>Discount</th>
@@ -35,14 +49,14 @@
         </tr>
         <tr>
             <th>Total</th>
-            <td>{{draft.total}}</td>
+            <td>${{draft.total}}</td>
         </tr>
     </table>
 </div>
 {% if items %}
     <div class="detail">
         <h3>Draft Items</h3>
-        <table class="entry">
+        <table class="entry alt_entry">
             <tr>
                 <th>Name</th>
                 <th>Quantity</th>
@@ -52,12 +66,12 @@
                 <tr>
                     <td>{{i.name}}</td>
                     <td>{{i.quantity}}</td>
-                    <td>{{i.line_total}}</td>
+                    <td>${{i.line_total}}</td>
                 </tr>
             {% endfor %}
             <tr>
                 <td colspan="2">Subtotal</td>
-                <td><td>{{draft.subtotal}}</td></td>
+                <td>${{draft.subtotal}}</td>
             </tr>
         </table>
     </div>

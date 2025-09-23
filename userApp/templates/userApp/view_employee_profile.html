@@ -28,7 +28,11 @@
       </tr>
       <tr>
         <th>Discord:</th>
-        <td>{{profile.discord_handle}}</td>
+        {% if profile.discord_handle %}
+          <td>{{profile.discord_handle}}</td>
+        {% else %}
+          <td>N/A</td>
+        {% endif %}
       </tr>
     </table>
   </div>
@@ -37,15 +41,27 @@
     <table class="entry">
       <tr>
         <th>Job Title:</th>
-        <td>{{profile.job_title}}</td>
+        {% if profile.job_title %}
+          <td>{{profile.job_title}}</td>
+        {% else %}
+          <td>TBD</td>
+        {% endif %}
       </tr>
       <tr>
-        <th>Email:</th>
-        <td>{{profile.work_email}}</td>
+        <th>Work Email:</th>
+        {% if profile.work_email %}
+          <td>{{profile.work_email}}</td>
+        {% else %}
+          <td>TBD</td>
+        {% endif %}
       </tr>
       <tr>
-        <th>Phone:</th>
-        <td>{{profile.work_phone}}</td>
+        <th>Work Phone:</th>
+        {% if profile.work_phone %}
+          <td>{{profile.work_phone}}</td>
+        {% else %}
+          <td>N/A</td>
+        {% endif %}
       </tr>
       <tr>
         <th rowspan="3">Address</th>

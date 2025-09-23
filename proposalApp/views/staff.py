@@ -42,7 +42,7 @@ def view_draft_detail(request, pk: int):
     )
     theList = list(draft.items.all())
     title = f"{draft.title} Proposal Draft"
-    ctx = {"user_obj": user, "read_only": True, "draft": draft, "items": list(draft.items.all())}
+    ctx = {"user_obj": user, "read_only": True, "draft": draft, "items": theList}
     ctx.update(base_ctx(request, title=title))
     ctx["page_heading"] = title
     return render(request, "proposal_staff/view_draft_detail.html", ctx)
