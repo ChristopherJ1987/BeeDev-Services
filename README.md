@@ -13,12 +13,14 @@ pip install -r requirements.txt
     b. Profiles - Staff vs Client   -------- Done
 2. Views
     a. Staff
-        1. Admin
-        2. Profile
+        1. Admin                   -------- Done
+        2. Profile                 -------- Done
         3. Dashboard
             a. Company List        -------- Done
             b. Staff List          -------- Done
-            c. Draft List          -------- Done
+            c. Draft/Proposal List -------- Done
+            d. Ticket List
+            e. Project List
         4. Proposal
         5. Project
     b. Client
@@ -148,3 +150,5 @@ pip install -r requirements.txt
         2. View all own tickets
         3. View One
         4. Edit / Update
+
+
