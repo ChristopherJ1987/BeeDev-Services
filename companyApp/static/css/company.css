@@ -33,6 +33,14 @@ body main .mini_menu {
   width: 100%;
   margin-bottom: 1em;
 }
+body main .mini_menu a {
+  color: var(--black);
+  text-decoration: none;
+}
+body main .mini_menu a:hover {
+  color: var(--green);
+  text-decoration: underline;
+}
 body main .search_bar {
   margin-bottom: 1em;
 }
@@ -47,6 +55,14 @@ body main table tr th {
   padding: 1em;
   font-size: 1.2em;
 }
+body main table tr a {
+  color: var(--black);
+  text-decoration: none;
+}
+body main table tr a:hover {
+  color: var(--green);
+  text-decoration: underline;
+}
 body main .details {
   display: flex;
   flex-direction: column;
@@ -57,4 +73,35 @@ body main .details {
 body main .details p {
   font-size: 1.1em;
   margin: 1em;
+}
+body main .info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  align-items: flex-start;
+  margin: 0 0 1em 0;
+  width: 50%;
+}
+body main .info h3 {
+  text-align: center;
+  background-color: var(--green);
+  color: var(--white);
+  width: 100%;
+  padding: 1em;
+  margin-bottom: 0.5em;
+}
+body main .info .entry {
+  width: 100%;
+}
+body main .info .entry th {
+  background-color: var(--background);
+  color: var(--black);
+  font-size: 1.2em;
+}
+body main .info .entry th,
+body main .info .entry td {
+  width: 50%;
+  text-align: left;
+  padding-left: 0.5em;
 }

@@ -3,8 +3,13 @@
 {% load page_title %}
 
 {% block content %}
+    <head>
+        <link rel="stylesheet" href="{% static 'css/user.css'%}?v={% now 'U' %}">
+    </head>
     <h1 class="title">{{ heading|default:page_heading|default:title_short|default:"Untitled Page"|stylize_title:"altTitle" }}</h1>
-    <h2><a href="{% url 'userApp:employee_home' %}">Dashboard</a></h2>
+    <div class="mini_menu">
+        <h2><a href="{% url 'userApp:employee_home' %}">Dashboard</a></h2>
+    </div>
     <table>
         <tr>
             <th>ID</th>

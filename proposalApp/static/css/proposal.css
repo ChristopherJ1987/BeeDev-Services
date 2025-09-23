@@ -24,9 +24,6 @@
   justify-content: center;
   align-items: center;
 }
-body main {
-  width: 95%;
-}
 body main .mini_menu {
   display: flex;
   flex-direction: row;
@@ -63,23 +60,7 @@ body main table tr a:hover {
   color: var(--green);
   text-decoration: underline;
 }
-body main .list_menu {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-body main .list_menu a {
-  color: var(--black);
-  text-decoration: none;
-  font-size: 1.2em;
-  margin: 1em;
-}
-body main .list_menu a:hover {
-  color: var(--green);
-  text-decoration: underline;
-}
-body main .info {
+body main .detail {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -88,7 +69,7 @@ body main .info {
   margin: 0 0 1em 0;
   width: 50%;
 }
-body main .info h3 {
+body main .detail h3 {
   text-align: center;
   background-color: var(--green);
   color: var(--white);
@@ -96,17 +77,21 @@ body main .info h3 {
   padding: 1em;
   margin-bottom: 0.5em;
 }
-body main .info .entry {
+body main .detail .entry {
   width: 100%;
 }
-body main .info .entry th {
+body main .detail .entry th {
   background-color: var(--background);
   color: var(--black);
   font-size: 1.2em;
 }
-body main .info .entry th,
-body main .info .entry td {
+body main .detail .entry th,
+body main .detail .entry td {
   width: 50%;
   text-align: left;
   padding-left: 0.5em;
+}
+body main .detail .alt_entry th {
+  background-color: var(--green);
+  color: var(--white);
 }

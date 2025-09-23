@@ -235,9 +235,11 @@ body {
                 color: var(--yellow);
                 font-size: 1.3rem;
                 padding: 10px 14px;
+                text-decoration: none;
 
                 &:hover {
                     color: var(--white);
+                    text-decoration: underline;
                 }
             }
         }
@@ -281,9 +283,20 @@ body {
     footer {
         .flexcolumn();
         justify-self: flex-end;
+        padding: 1em;
+        margin-top: 2em;
 
         span {
             font-size: .6em;
+            padding: 1em;
+        }
+        a {
+            color: var(--black);
+            text-decoration: none;
+        }
+        a:hover {
+            color: var(--green);
+            text-decoration: underline;
         }
     }
 }

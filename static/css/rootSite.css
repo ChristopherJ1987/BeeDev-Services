@@ -263,9 +263,11 @@ body header .main_nav a {
   color: var(--yellow);
   font-size: 1.3rem;
   padding: 10px 14px;
+  text-decoration: none;
 }
 body header .main_nav a:hover {
   color: var(--white);
+  text-decoration: underline;
 }
 body main {
   display: flex;
@@ -313,7 +315,18 @@ body footer {
   justify-content: center;
   align-items: center;
   justify-self: flex-end;
+  padding: 1em;
+  margin-top: 2em;
 }
 body footer span {
   font-size: 0.6em;
+  padding: 1em;
+}
+body footer a {
+  color: var(--black);
+  text-decoration: none;
+}
+body footer a:hover {
+  color: var(--green);
+  text-decoration: underline;
 }

@@ -11,15 +11,35 @@
     <h2><a href="{% url 'userApp:employee_home' %}">Dashboard</a></h2>
     <h2><a href="{% url 'company_staff:view_all_companies' %}">Company List</a></h2>
 </div>
-
-<div class="details">
-    <p>Company Name: {{company.name}}</p>
-    <p>Primary Contact Name: {{company.primary_contact_name}}</p>
-    <p>Primary Email: {{company.primary_email}}</p>
+<div class="info">
+  <h3>Company Information:</h3>
+  <table class="entry">
+    <tr>
+      <th>Company Name:</th>
+      <td>{{company.name}}</td>
+    </tr>
+    <tr>
+      <th>Primary Contact Name:</th>
+      <td>{{company.primary_contact_name}}</td>
+    </tr>
+    <tr>
+      <th>Primary Email:</th>
+      <td>{{company.primary_email}}</td>
+    </tr>
+  </table>
 </div>
-<div class="details">
-    <p>Current Client Status: {{company.status}}</p>
-    <p>Current Pipeline Status: {{company.pipeline_status}}</p>
+<div class="info">
+  <h3>Status</h3>
+  <table class="entry">
+    <tr>
+      <th>Current Client Status:</th>
+      <td>{{company.status}}</td>
+    </tr>
+    <tr>
+      <th>Current Pipeline Status:</th>
+      <td>{{company.pipeline_status}}</td>
+    </tr>
+  </table>
 </div>
 
 {% endblock content %}
