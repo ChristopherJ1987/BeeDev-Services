@@ -13,37 +13,38 @@ pip install -r requirements.txt
     b. Profiles - Staff vs Client   -------- Done
 2. Views
     a. Staff
-        1. Admin                   -------- Done
-        2. Profile                 -------- Done
+        1. Admin                    -------- Done
+        2. Profile                  -------- Done
         3. Dashboard
-            a. Company List        -------- Done
-            b. Staff List          -------- Done
-            c. Draft/Proposal List -------- Done
+            a. Company List         -------- Done
+            b. Staff List           -------- Done
+            c. Draft/Proposal List  -------- Done
             d. Ticket List
             e. Project List
+            f. Client Contact List  -------- Done
         4. Proposal
         5. Project
     b. Client
-        1. Profile                 -------- Done
+        1. Profile                  -------- Done
         2. Proposal
         3. Invoice
         4. Status
 3. Permissions
-    a. Staff Vs Client             -------- Done
+    a. Staff Vs Client              -------- Done
 
 ## AnnounceApp:
 1. Models
-    a. Version                     -------- Done
+    a. Version                      -------- Done
     b. Announcement
-        1. All, Staff, client      -------- Done
+        1. All, Staff, client       -------- Done
 2. Views
-    a. Base Templates              -------- Done
+    a. Base Templates               -------- Done
 
 ## CompanyApp:
 1. Models
-    a. Company                     -------- Done
-    b. Contact                     -------- Done
-    c. Links                       -------- Done
+    a. Company                      -------- Done
+    b. Contact                      -------- Done
+    c. Links                        -------- Done
 2. Views
     a. Staff
         1. View All
@@ -56,22 +57,22 @@ pip install -r requirements.txt
 
 ## ProposalApp:
 1. Models
-    a. Job Rate                    -------- Done
-    b. Base Settings               -------- Done
-    c. Discount                    -------- Done
-    d. CatalogItem                 -------- Done
-    e. Cost Tier                   -------- Done
-    f. Proposal Draft              -------- Done
-    g. Draft Item                  -------- Done
-    h. Proposal                    -------- Done
-    i. Proposal Line Item          -------- Done
-    j. Proposal Applied Discount   -------- Done
-    k. Proposal Recipient          -------- Done
-    l. Proposal Event              -------- Done
+    a. Job Rate                     -------- Done
+    b. Base Settings                -------- Done
+    c. Discount                     -------- Done
+    d. CatalogItem                  -------- Done
+    e. Cost Tier                    -------- Done
+    f. Proposal Draft               -------- Done
+    g. Draft Item                   -------- Done
+    h. Proposal                     -------- Done
+    i. Proposal Line Item           -------- Done
+    j. Proposal Applied Discount    -------- Done
+    k. Proposal Recipient           -------- Done
+    l. Proposal Event               -------- Done
 2. Views
     a. Staff
-        1. View All Drafts         -------- Done
-        2. View One Draft          -------- Done
+        1. View All Drafts          -------- Done
+        2. View One Draft           -------- Done
         3. Create Draft
         4. Edit/Update Draft
         5. Convert to Proposal
