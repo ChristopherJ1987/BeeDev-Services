@@ -5,6 +5,9 @@ requirements.txt contains all current packages needed as of 9/18/25
 To update your env with the required packages run:
 pip install -r requirements.txt
 
+Flush data in db
+python manage.py flush --no-input
+
 # Project Status in Dev:
 
 ## UserApp:
@@ -26,9 +29,10 @@ pip install -r requirements.txt
         5. Project
     b. Client
         1. Profile                  -------- Done
-        2. Proposal
-        3. Invoice
-        4. Status
+        2. Dashboard
+            a. Proposal
+            b. Invoice
+            c. Status
 3. Permissions
     a. Staff Vs Client              -------- Done
 
@@ -47,8 +51,8 @@ pip install -r requirements.txt
     c. Links                        -------- Done
 2. Views
     a. Staff
-        1. View All
-        2. View One
+        1. View All - Dash          -------- Done
+        2. View One - Dash          -------- Done
         3. Add
         4. Edit/Update
     b. Client
@@ -71,8 +75,8 @@ pip install -r requirements.txt
     l. Proposal Event               -------- Done
 2. Views
     a. Staff
-        1. View All Drafts          -------- Done
-        2. View One Draft           -------- Done
+        1. View All Drafts - Dash   -------- Done
+        2. View One Draft - Dash    -------- Done
         3. Create Draft
         4. Edit/Update Draft
         5. Convert to Proposal

@@ -4,6 +4,7 @@ from django.db import transaction
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
+from companyApp.models import CompanyMembership
 from .models import (
     JobRate,
     BaseSetting,
@@ -17,6 +18,7 @@ from .models import (
     ProposalRecipient,
     ProposalEvent,
     CostTier,
+    ProposalViewer,  # <-- NEW
 )
 
 # -------- permission helpers --------
@@ -297,9 +299,33 @@ class ProposalAppliedDiscountInline(admin.TabularInline):
     can_delete = False
 
 
+# ---- NEW: per-proposal viewers (visibility overrides) ----
+class ProposalViewerInline(admin.TabularInline):
+    model = ProposalViewer
+    extra = 0
+    autocomplete_fields = ("user",)
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        field = super().formfield_for_foreignkey(db_field, request, **kwargs)
+        if db_field.name == "user":
+            prop = getattr(request, "_current_proposal_obj", None)
+            if prop and prop.pk:
+                member_user_ids = CompanyMembership.objects.filter(
+                    company=prop.company, is_active=True
+                ).values_list("user_id", flat=True)
+                field.queryset = field.queryset.filter(pk__in=member_user_ids)
+        return field
+
+
 @admin.register(Proposal)
 class ProposalAdmin(admin.ModelAdmin):
-    inlines = [ProposalRecipientInline, ProposalEventInline, ProposalLineItemInline, ProposalAppliedDiscountInline]
+    inlines = [
+        ProposalRecipientInline,
+        ProposalEventInline,
+        ProposalLineItemInline,
+        ProposalAppliedDiscountInline,
+        ProposalViewerInline,   # <-- NEW
+    ]
 
     list_display = (
         "title", "company", "currency",
@@ -338,6 +364,11 @@ class ProposalAdmin(admin.ModelAdmin):
     )
 
     actions = ["action_generate_link", "action_mark_sent", "action_mark_signed", "action_make_deposit_invoice"]
+
+    # Make current object available to the viewers inline for user filtering
+    def get_form(self, request, obj=None, **kwargs):
+        request._current_proposal_obj = obj
+        return super().get_form(request, obj, **kwargs)
 
     # ---- nice UI bits ----
     def sign_link_preview(self, obj):
@@ -390,3 +421,25 @@ class ProposalAdmin(admin.ModelAdmin):
             if inv is not None:
                 created += 1
         self.message_user(request, f"Created {created} deposit invoice(s).", level=messages.SUCCESS)
+
+
+# ---------------------------
+# Optional: audit viewers
+# ---------------------------
+@admin.register(ProposalViewer)
+class ProposalViewerAdmin(admin.ModelAdmin):
+    list_display = ("proposal", "user")
+    search_fields = ("proposal__title", "proposal__company__name", "user__username", "user__email")
+    autocomplete_fields = ("proposal", "user")
+
+    def has_module_permission(self, request):
+        return request.user.is_staff
+
+    def has_add_permission(self, request):
+        return is_owner(request.user) or is_admin(request.user)
+
+    def has_change_permission(self, request, obj=None):
+        return is_owner(request.user) or is_admin(request.user)
+
+    def has_delete_permission(self, request, obj=None):
+        return is_owner(request.user) or is_admin(request.user)

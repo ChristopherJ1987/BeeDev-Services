@@ -68,6 +68,16 @@ class Invoice(models.Model):
     created_at     = models.DateTimeField(auto_now_add=True)
     updated_at     = models.DateTimeField(auto_now=True)
 
+    allowed_users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        through="InvoiceViewer",
+        related_name="invoices_shared_with",
+        blank=True,
+    )
+
+    def __str__(self):
+        return f"Invoice {self.number} — {self.company.name}"
+
     class Meta:
         ordering = ("-created_at",)
         indexes = [
@@ -234,3 +244,18 @@ class Payment(models.Model):
         super().save(*args, **kwargs)
         # After saving a payment, refresh invoice totals/status
         self.invoice.refresh_status_from_payments(save=True)
+
+class InvoiceViewer(models.Model):
+    """
+    Per-invoice override: allow specific users (who belong to the invoice's company)
+    to view this invoice even if their membership flags are off.
+    """
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name="allowed_viewers")
+    user    = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="allowed_invoices")
+
+    class Meta:
+        unique_together = [("invoice", "user")]
+        indexes = [models.Index(fields=["invoice", "user"])]
+
+    def __str__(self):
+        return f"{self.user} can view {self.invoice}"
