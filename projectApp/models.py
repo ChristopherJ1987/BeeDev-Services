@@ -33,7 +33,6 @@ def link_section_choices():
         ("OTHER", "Other"),
     ]
 
-
 class Project(models.Model):
     class Status(models.TextChoices):
         PLANNING   = "PLANNING",   "Planning"
@@ -68,6 +67,10 @@ class Project(models.Model):
     target_launch_date = models.DateField(null=True, blank=True)
     actual_launch_date = models.DateField(null=True, blank=True)
 
+    client_can_view_status      = models.BooleanField(default=True)
+    client_can_view_links       = models.BooleanField(default=True)
+    client_can_view_description = models.BooleanField(default=False)
+
     is_active  = models.BooleanField(default=True)
     tags       = models.CharField(max_length=200, blank=True)
 
@@ -93,7 +96,6 @@ class Project(models.Model):
             self.slug = slug
         super().save(*args, **kwargs)
 
-
 class ProjectMember(models.Model):
     class Role(models.TextChoices):
         MANAGER = "MANAGER", "Project Manager"
@@ -116,7 +118,6 @@ class ProjectMember(models.Model):
 
     def __str__(self):
         return f"{self.project.slug} · {self.user} ({self.role})"
-
 
 class ProjectMilestone(models.Model):
     class State(models.TextChoices):
@@ -144,7 +145,6 @@ class ProjectMilestone(models.Model):
     def __str__(self):
         return f"{self.project.slug}: {self.name}"
 
-
 class ProjectUpdate(models.Model):
     class Visibility(models.TextChoices):
         INTERNAL = "INTERNAL", "Internal (staff only)"
@@ -167,7 +167,6 @@ class ProjectUpdate(models.Model):
     def __str__(self):
         return f"{self.project.slug}: {self.title}"
 
-
 class ProjectUpdateAttachment(models.Model):
     update   = models.ForeignKey(ProjectUpdate, on_delete=models.CASCADE, related_name="attachments")
     file     = models.FileField(upload_to=update_attachment_upload_to,
@@ -177,7 +176,6 @@ class ProjectUpdateAttachment(models.Model):
 
     def __str__(self):
         return self.original_name or os.path.basename(self.file.name)
-
 
 class ProjectEnvironment(models.Model):
     class Kind(models.TextChoices):
@@ -208,7 +206,6 @@ class ProjectEnvironment(models.Model):
     def __str__(self):
         return f"{self.project.slug} {self.kind}"
         
-
 class ProjectLink(models.Model):
     class Visibility(models.TextChoices):
         EMPLOYEE = "EMPLOYEE", "Employee only"
@@ -229,3 +226,24 @@ class ProjectLink(models.Model):
 
     def __str__(self):
         return f"{self.project.slug}: {self.label}"
+
+class ProjectViewer(models.Model):
+    """
+    Extra allow-list of users who may view this project (per-project override).
+    Useful when not every company member should see this project.
+    """
+    project = models.ForeignKey("projectApp.Project", on_delete=models.CASCADE, related_name="viewers")
+    user    = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="projects_visible")
+
+    granted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name="project_view_grants"
+    )
+    granted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = (("project", "user"),)
+        indexes = [models.Index(fields=["project", "user"])]
+
+    def __str__(self):
+        return f"{self.project.slug} → {self.user}"

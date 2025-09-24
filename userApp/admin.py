@@ -5,7 +5,7 @@ from django.contrib.auth.models import Group
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Q
 from django.utils.html import format_html
-
+from companyApp.models import DncEntry
 from .models import User, ClientProfile, EmployeeProfile
 
 # ---- helpers ----
@@ -64,6 +64,23 @@ class EmployeeProfileInline(admin.StackedInline):
             return format_html('<img src="{}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;" />', obj.profile_image.url)
         return "—"
     image_preview.short_description = "Preview"
+
+class UserDncEntryInline(admin.TabularInline):
+    model = DncEntry
+    fk_name = "user"
+    extra = 0
+    fields = ("channel", "value_raw", "value_normalized", "reason", "is_active", "source", "notes", "created_at")
+    readonly_fields = ("value_normalized", "created_at")
+    autocomplete_fields = ("reason",)
+
+    def has_add_permission(self, request, obj):
+        return is_owner(request.user) or is_admin(request.user)
+
+    def has_change_permission(self, request, obj=None):
+        return is_owner(request.user) or is_admin(request.user)
+
+    def has_delete_permission(self, request, obj=None):
+        return is_owner(request.user) or is_admin(request.user)
 
 
 @admin.register(User)
@@ -144,11 +161,15 @@ class CustomUserAdmin(BaseUserAdmin):
         if is_plain_staff(request.user) and obj.pk == request.user.pk:
             return []
         instances = []
+        # existing logic you already have...
         if obj.role == User.Roles.CLIENT and not is_hr(request.user):
             instances.append(ClientProfileInline(self.model, self.admin_site))
         if obj.role in (User.Roles.EMPLOYEE, User.Roles.ADMIN, User.Roles.OWNER):
             if not (is_hr(request.user) and obj.pk == request.user.pk):
                 instances.append(EmployeeProfileInline(self.model, self.admin_site))
+        # show DNC inline for Owner/Admin over any user
+        if is_owner(request.user) or is_admin(request.user):
+            instances.append(UserDncEntryInline(self.model, self.admin_site))
         return instances
 
 

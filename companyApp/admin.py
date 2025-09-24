@@ -24,29 +24,22 @@ def is_plain_staff(u):
     return u.is_active and u.is_staff and not is_owner(u) and not is_admin(u) and not is_hr(u)
 
 
-# -------- Role presets for memberships --------
-ROLE_PRESETS = {
-    CompanyMembership.Role.ACCOUNT_ADMIN: dict(can_view_invoices=True, can_view_proposals=True,  can_open_tickets=True),
-    CompanyMembership.Role.MANAGER:       dict(can_view_invoices=True, can_view_proposals=True,  can_open_tickets=True),
-    CompanyMembership.Role.BILLING_ONLY:  dict(can_view_invoices=True, can_view_proposals=False, can_open_tickets=False),
-    CompanyMembership.Role.MEMBER:        dict(can_view_invoices=False, can_view_proposals=False, can_open_tickets=True),
-    CompanyMembership.Role.READ_ONLY:     dict(can_view_invoices=False, can_view_proposals=False, can_open_tickets=False),
-}
-
-
 # -------- Inlines --------
 class CompanyMembershipInline(admin.TabularInline):
+    """
+    Manage per-company client memberships & visibility.
+    Restricts selectable users to clients by default.
+    """
     model = CompanyMembership
     extra = 0
-    autocomplete_fields = ["user"]
+    autocomplete_fields = ("user",)
     fields = (
         "user", "role",
-        "can_view_invoices", "can_view_proposals", "can_open_tickets",
+        "can_view_proposals", "can_view_invoices", "can_open_tickets",
         "is_active", "added_at",
     )
     readonly_fields = ("added_at",)
 
-    # permissions: Owner/Admin only
     def has_add_permission(self, request, obj):
         return is_owner(request.user) or is_admin(request.user)
 
@@ -56,12 +49,17 @@ class CompanyMembershipInline(admin.TabularInline):
     def has_delete_permission(self, request, obj=None):
         return is_owner(request.user) or is_admin(request.user)
 
-    # apply presets on create
-    def save_model(self, request, obj, form, change):
-        if not change and obj.role in ROLE_PRESETS:
-            for k, v in ROLE_PRESETS[obj.role].items():
-                setattr(obj, k, v)
-        super().save_model(request, obj, form, change)
+    # Limit user choices to client users (avoid adding staff by mistake)
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        field = super().formfield_for_foreignkey(db_field, request, **kwargs)
+        if db_field.name == "user":
+            try:
+                from userApp.models import User
+                field.queryset = field.queryset.filter(role=User.Roles.CLIENT)
+            except Exception:
+                # If custom user model/enum not available during import, leave unfiltered
+                pass
+        return field
 
 
 class CompanyContactInline(admin.TabularInline):
@@ -79,6 +77,17 @@ class CompanyContactInline(admin.TabularInline):
 
     def has_delete_permission(self, request, obj=None):
         return is_owner(request.user) or is_admin(request.user)
+
+    # Optional: also restrict contact → user picker to clients
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        field = super().formfield_for_foreignkey(db_field, request, **kwargs)
+        if db_field.name == "user":
+            try:
+                from userApp.models import User
+                field.queryset = field.queryset.filter(role=User.Roles.CLIENT)
+            except Exception:
+                pass
+        return field
 
 
 class CompanyLinkInline(admin.TabularInline):
@@ -173,6 +182,7 @@ class CompanyAdmin(admin.ModelAdmin):
     search_fields = ("name", "primary_contact_name", "primary_email", "phone", "city", "state_region", "postal_code", "website")
     ordering = ("name",)
     prepopulated_fields = {"slug": ("name",)}
+    # Include memberships inline for quick role/visibility management
     inlines = [CompanyMembershipInline, CompanyContactInline, CompanyLinkInline]
 
     fieldsets = (
@@ -200,6 +210,17 @@ class CompanyAdmin(admin.ModelAdmin):
     )
     readonly_fields = ("logo_preview", "created_at", "updated_at")
 
+    actions = [
+        "grant_invoice_access_all",
+        "revoke_invoice_access_all",
+        "grant_proposal_access_all",
+        "revoke_proposal_access_all",
+        "enable_ticket_opening_all",
+        "disable_ticket_opening_all",
+        "reset_visibility_to_defaults",
+        "grant_invoice_access_billing_only",   # optional, see method below
+    ]
+
     # ----- logo preview -----
     def logo_preview(self, obj):
         if obj and (obj.logo or obj.logo_external_url):
@@ -217,7 +238,6 @@ class CompanyAdmin(admin.ModelAdmin):
 
     # ----- permissions -----
     def has_module_permission(self, request):
-        # Hide Companies from HR and non-staff (matches your current behavior)
         if is_hr(request.user) or not request.user.is_staff:
             return False
         return True
@@ -230,7 +250,7 @@ class CompanyAdmin(admin.ModelAdmin):
         return is_owner(request.user) or is_admin(request.user)
 
     def has_change_permission(self, request, obj=None):
-        # Owner/Admin can change; others read-only via module gate above
+        # Owner/Admin can change; HR cannot; plain staff read-only
         if is_owner(request.user) or is_admin(request.user):
             return True
         return False
@@ -244,44 +264,86 @@ class CompanyAdmin(admin.ModelAdmin):
         if not change and not obj.created_by_id:
             obj.created_by = request.user
         super().save_model(request, obj, form, change)
+    
+    # ---- Bulk actions ----
+    @admin.action(description="Grant invoice access to ALL company members")
+    def grant_invoice_access_all(self, request, queryset):
+        from .models import CompanyMembership
+        total = 0
+        for c in queryset:
+            total += CompanyMembership.objects.filter(company=c, is_active=True)\
+                                              .update(can_view_invoices=True)
+        self.message_user(request, f"Granted invoice access on {total} membership(s).")
+
+    @admin.action(description="Revoke invoice access from ALL company members")
+    def revoke_invoice_access_all(self, request, queryset):
+        from .models import CompanyMembership
+        total = 0
+        for c in queryset:
+            total += CompanyMembership.objects.filter(company=c, is_active=True)\
+                                              .update(can_view_invoices=False)
+        self.message_user(request, f"Revoked invoice access on {total} membership(s).")
+
+    @admin.action(description="Grant proposal access to ALL company members")
+    def grant_proposal_access_all(self, request, queryset):
+        from .models import CompanyMembership
+        total = 0
+        for c in queryset:
+            total += CompanyMembership.objects.filter(company=c, is_active=True)\
+                                              .update(can_view_proposals=True)
+        self.message_user(request, f"Granted proposal access on {total} membership(s).")
+
+    @admin.action(description="Revoke proposal access from ALL company members")
+    def revoke_proposal_access_all(self, request, queryset):
+        from .models import CompanyMembership
+        total = 0
+        for c in queryset:
+            total += CompanyMembership.objects.filter(company=c, is_active=True)\
+                                              .update(can_view_proposals=False)
+        self.message_user(request, f"Revoked proposal access on {total} membership(s).")
+
+    @admin.action(description="Enable ticket opening for ALL company members")
+    def enable_ticket_opening_all(self, request, queryset):
+        from .models import CompanyMembership
+        total = 0
+        for c in queryset:
+            total += CompanyMembership.objects.filter(company=c, is_active=True)\
+                                              .update(can_open_tickets=True)
+        self.message_user(request, f"Enabled ticket opening on {total} membership(s).")
+
+    @admin.action(description="Disable ticket opening for ALL company members")
+    def disable_ticket_opening_all(self, request, queryset):
+        from .models import CompanyMembership
+        total = 0
+        for c in queryset:
+            total += CompanyMembership.objects.filter(company=c, is_active=True)\
+                                              .update(can_open_tickets=False)
+        self.message_user(request, f"Disabled ticket opening on {total} membership(s).")
+
+    @admin.action(description="Reset member visibility to defaults (props❌, invoices❌, tickets✅)")
+    def reset_visibility_to_defaults(self, request, queryset):
+        from .models import CompanyMembership
+        total = 0
+        for c in queryset:
+            total += CompanyMembership.objects.filter(company=c, is_active=True).update(
+                can_view_proposals=False,
+                can_view_invoices=False,
+                can_open_tickets=True,
+            )
+        self.message_user(request, f"Reset visibility flags on {total} membership(s).")
+
+    @admin.action(description="Grant invoice access to BILLING_ONLY members")
+    def grant_invoice_access_billing_only(self, request, queryset):
+        from .models import CompanyMembership
+        total = 0
+        for c in queryset:
+            total += CompanyMembership.objects.filter(
+                company=c, is_active=True, role=CompanyMembership.Role.BILLING_ONLY
+            ).update(can_view_invoices=True)
+        self.message_user(request, f"Granted invoice access on {total} BILLING_ONLY membership(s).")
 
 
 # -------- Standalone admins (optional if you want to manage outside the Company page) --------
-@admin.register(CompanyMembership)
-class CompanyMembershipAdmin(admin.ModelAdmin):
-    list_display = ("company", "user", "role", "can_view_invoices", "can_view_proposals", "can_open_tickets", "is_active", "added_at")
-    list_filter  = ("role", "is_active", "can_view_invoices", "can_view_proposals", "can_open_tickets")
-    search_fields = ("company__name", "user__email", "user__username", "user__first_name", "user__last_name")
-    autocomplete_fields = ["company", "user"]
-    readonly_fields = ("added_at",)
-
-    actions = ["apply_role_presets"]
-
-    # permissions: Owner/Admin only
-    def has_module_permission(self, request):
-        return request.user.is_staff
-
-    def has_add_permission(self, request):
-        return is_owner(request.user) or is_admin(request.user)
-
-    def has_change_permission(self, request, obj=None):
-        return is_owner(request.user) or is_admin(request.user)
-
-    def has_delete_permission(self, request, obj=None):
-        return is_owner(request.user) or is_admin(request.user)
-
-    def apply_role_presets(self, request, queryset):
-        updated = 0
-        for mem in queryset:
-            if mem.role in ROLE_PRESETS:
-                for k, v in ROLE_PRESETS[mem.role].items():
-                    setattr(mem, k, v)
-                mem.save(update_fields=list(ROLE_PRESETS[mem.role].keys()))
-                updated += 1
-        self.message_user(request, f"Applied role presets to {updated} membership(s).")
-    apply_role_presets.short_description = "Apply role-based permission presets"
-
-
 @admin.register(CompanyContact)
 class CompanyContactAdmin(admin.ModelAdmin):
     list_display = ("company", "is_primary", "name", "title", "email", "phone", "updated_at")

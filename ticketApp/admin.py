@@ -6,6 +6,7 @@ from django.urls import reverse
 from django.utils.http import urlencode
 from django.db.models import Count
 from .models import Ticket, TicketMessage, TicketAttachment, TicketEvent
+from companyApp.models import CompanyMembership
 
 # ---------- permission helpers ----------
 def is_owner(u):
@@ -43,6 +44,17 @@ class TicketMessageInline(admin.StackedInline):
 
     def has_delete_permission(self, request, obj=None):
         return is_owner(request.user) or is_admin(request.user)
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        field = super().formfield_for_foreignkey(db_field, request, **kwargs)
+        if db_field.name == "author":
+            t = getattr(request, "_current_ticket_obj", None)
+            if t and t.pk:
+                member_ids = CompanyMembership.objects.filter(
+                    company=t.company, is_active=True
+                ).values_list("user_id", flat=True)
+                field.queryset = field.queryset.filter(Q(is_staff=True) | Q(pk__in=member_ids))
+        return field
 
 
 class TicketEventInline(admin.TabularInline):
@@ -156,6 +168,44 @@ class TicketAdmin(admin.ModelAdmin):
         updated = queryset.update(assigned_to=request.user)
         self.message_user(request, f"Assigned {updated} ticket(s) to you.")
     assign_to_me.short_description = "Assign to me"
+
+    def attachments_link(self, obj):
+        from django.utils.http import urlencode
+        count = getattr(obj, "_attach_count", 0) or 0
+        url = reverse(f"admin:{TicketAttachment._meta.app_label}_{TicketAttachment._meta.model_name}_changelist")
+        url = f"{url}?{urlencode({'message__ticket__id__exact': obj.id})}"
+        return format_html('<a href="{}">{}</a>', url, f"{count} file(s)")
+
+    def get_form(self, request, obj=None, **kwargs):
+        # stash current object so inlines & formfield filters can see the ticket
+        request._current_ticket_obj = obj
+        return super().get_form(request, obj, **kwargs)
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        field = super().formfield_for_manytomany(db_field, request, **kwargs)
+        if db_field.name == "watchers":
+            t = getattr(request, "_current_ticket_obj", None)
+            if t and t.pk:
+                from companyApp.models import CompanyMembership
+                member_ids = CompanyMembership.objects.filter(
+                    company=t.company, is_active=True
+                ).values_list("user_id", flat=True)
+                field.queryset = field.queryset.filter(Q(is_staff=True) | Q(pk__in=member_ids))
+        return field
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        field = super().formfield_for_foreignkey(db_field, request, **kwargs)
+        t = getattr(request, "_current_ticket_obj", None)
+        if t and t.pk and db_field.name in ("assigned_to", "customer_user"):
+            member_ids = CompanyMembership.objects.filter(
+                company=t.company, is_active=True
+            ).values_list("user_id", flat=True)
+            # assigned_to can be staff OR company members; customer_user should be company members
+            if db_field.name == "assigned_to":
+                field.queryset = field.queryset.filter(Q(is_staff=True) | Q(pk__in=member_ids))
+            else:  # customer_user
+                field.queryset = field.queryset.filter(pk__in=member_ids)
+        return field
 
 
 @admin.register(TicketMessage)
