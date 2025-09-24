@@ -5,19 +5,53 @@
     {% block nav %}
     <nav class="main_nav">
         {% if request.user.is_authenticated %}
-            {% if request.user.is_staff or request.user.role == "EMPLOYEE" %}
-                <a href="/admin/">Admin</a>
-                <a href="{% url 'userApp:employee_home' %}">Employee Dashboard</a>
-                <a href="{% url 'userApp:view_employee_profile' %}">Profile</a>
+        {# ===== EMPLOYEE SIDE ===== #}
+            {% if request.user.is_staff or request.user.role == "EMPLOYEE" or request.user.role == "ADMIN" or request.user.role == "OWNER" or request.user.role == "HR" %}
+                {% if request.user.is_staff %}
+                    <a href="{% url 'admin:index' %}">Admin</a>
+                {% endif %}
+                <a href="{% url 'userApp:employee_home' %}">Dashboard</a>
+                <details>
+                    <summary class="has_caret">Accounts</summary>
+                    <div class="menu">
+                        <a href="#">Companies</a>
+                        <a href="#">Proposals</a>
+                        <a href="#">Client Users</a>
+                        {% if request.user.role == "ADMIN" or request.user.role == "OWNER" %}
+                            <a href="#">Invoices</a>
+                        {% endif %}
+                        {# Optional later:<a href="#">DNC Requests</a>#}
+                    </div>
+                </details>
+                <a href="#">Projects</a>
+                <a href="#">Tickets</a>
+                {# Team visible to Admin/Owner only #}
+                {% if request.user.role == "ADMIN" or request.user.role == "OWNER" %}
+                    <a href="#">Team</a>
+                {% endif %}
+
+                <details class="menu_group align_right">
+                    <summary class="has_caret">
+                    {{ request.user.first_name|default:request.user.username }}
+                    </summary>
+                    <div class="menu">
+                        <a href="{% url 'userApp:view_employee_profile' %}">Profile</a>
+                        <form method="post" action="{% url 'userApp:logout' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="linklike">Logout</button>
+                        </form>
+                    </div>
+                </details>
             {% else %}
+            {# ===== CLIENT SIDE ===== #}
                 <a href="{% url 'userApp:client_home' %}">Dashboard</a>
                 <a href="{% url 'userApp:view_client_profile' %}">Profile</a>
                 <a href="#">Company Profile</a>
+                <form method="post" action="{% url 'userApp:logout' %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="linklike">Logout</button>
+                </form>
             {% endif %}
-            <form method="post" action="{% url 'userApp:logout' %}" style="display:inline;">
-                {% csrf_token %}
-                <button type="submit" class="linklike">Logout</button>
-            </form>
         {% else %}
             <a href="{% url 'userApp:login' %}">Login</a>
         {% endif %}

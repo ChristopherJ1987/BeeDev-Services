@@ -247,6 +247,16 @@ body header .main_nav {
   background-color: var(--black);
   padding: 8px 36px;
 }
+body header .main_nav details summary {
+  font-size: 1.3rem;
+  padding: 10px 14px;
+  text-decoration: none;
+  color: var(--yellow);
+}
+body header .main_nav details summary:hover {
+  color: var(--white);
+  text-decoration: underline;
+}
 body header .main_nav .linklike {
   padding: 10px 14px;
   background-color: var(--yellow);
