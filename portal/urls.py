@@ -17,10 +17,11 @@ urlpatterns = [
     path('__reload__/', include('django_browser_reload.urls')),
     path('', include('userApp.urls')),
     path('admin/', admin.site.urls),
+    # Staff
     path('company/', include(('companyApp.urls_staff', 'company_staff'), namespace='company_staff')),
+    path('proposals/', include(('proposalApp.urls_staff', 'proposal_staff'), namespace='proposals_staff')),
+    # Client
     path('client/company/', include(('companyApp.urls_client', 'company_client'), 
     namespace='company_client')),
-    path('proposals/', include(('proposalApp.urls_staff', 'proposal_staff'), namespace='proposals_staff')),
-    # path('client/company/', include(('companyApp.urls_client', 'company_client'), 
-    # namespace='company_client'))
+    path('client/proposal/', include(('proposalApp.urls_client', 'proposal_client'), namespace='proposal_client')),
 ]
