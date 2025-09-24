@@ -1,20 +1,40 @@
 # proposalApp/models.py
+import os, uuid, datetime
 from decimal import Decimal, ROUND_HALF_UP
 import secrets
 from importlib import import_module
-
 from django.conf import settings
 from django.db import models, transaction
 from django.utils import timezone
+from django.core.validators import FileExtensionValidator
+from django.core.exceptions import ValidationError
+from django.db import transaction
 
 
-# ---------- Money helpers ----------
+# ---------- Helpers ----------
 MONEY = Decimal("0.01")
+ALLOWED_PROPOSAL_PDF_EXTS = ["pdf"]
+MAX_PROPOSAL_PDF_BYTES = 15 * 1024 * 1024  # 15 MB
 
 def q2(v: Decimal) -> Decimal:
     if v is None:
         return Decimal("0.00")
     return (Decimal(v)).quantize(MONEY, rounding=ROUND_HALF_UP)
+
+def validate_proposal_pdf_size(f):
+    if f.size and f.size > MAX_PROPOSAL_PDF_BYTES:
+        raise ValidationError(f"PDF too large (>{MAX_PROPOSAL_PDF_BYTES//1024//1024}MB).")
+
+def proposal_pdf_upload_to(instance, filename):
+    """
+    media/proposals/YYYY/MM/<company-or-proposal>-<uuid>.pdf
+    Avoids relying on PK and tolerates any original extension.
+    """
+    today = datetime.date.today()
+    ext = os.path.splitext(filename)[1].lower()
+    ext = ".pdf" if ext != ".pdf" else ext
+    company_slug = getattr(getattr(instance, "company", None), "slug", None) or "proposal"
+    return f"proposals/{today.year}/{today.month:02d}/{company_slug}-{uuid.uuid4().hex}{ext}"
 
 
 # ======================================================================
@@ -22,11 +42,9 @@ def q2(v: Decimal) -> Decimal:
 # ======================================================================
 
 class JobRate(models.Model):
-    """Base hourly rate by job/role (e.g., DEV, DESIGN, PM)."""
-    code = models.SlugField(max_length=40, unique=True)  # 'dev', 'design'
+    code = models.SlugField(max_length=40, unique=True)
     name = models.CharField(max_length=120)
     hourly_rate = models.DecimalField(max_digits=10, decimal_places=2)
-
     is_active = models.BooleanField(default=True)
     sort_order = models.PositiveIntegerField(default=0)
 
@@ -36,14 +54,11 @@ class JobRate(models.Model):
     def __str__(self):
         return f"{self.name} @ {self.hourly_rate}"
 
-
 class BaseSetting(models.Model):
-    """Base price 'addon' applied per line item (your 'base setting' amount)."""
-    code = models.SlugField(max_length=60, unique=True)  # 'vite-app', 'branding-kit'
+    code = models.SlugField(max_length=60, unique=True)
     name = models.CharField(max_length=160)
     base_rate = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     description = models.TextField(blank=True)
-
     is_active = models.BooleanField(default=True)
     sort_order = models.PositiveIntegerField(default=0)
 
@@ -53,16 +68,15 @@ class BaseSetting(models.Model):
     def __str__(self):
         return f"{self.name} (base {self.base_rate})"
 
-
 class Discount(models.Model):
     class Kind(models.TextChoices):
         PERCENT = "PERCENT", "Percent"
         FIXED   = "FIXED",   "Fixed amount"
 
     name  = models.CharField(max_length=120)
-    code  = models.SlugField(max_length=40, unique=True)  # 'spring-10'
+    code  = models.SlugField(max_length=40, unique=True)
     kind  = models.CharField(max_length=10, choices=Kind.choices, default=Kind.PERCENT)
-    value = models.DecimalField(max_digits=10, decimal_places=2)  # percent or fixed amount
+    value = models.DecimalField(max_digits=10, decimal_places=2)
     is_active = models.BooleanField(default=True)
 
     class Meta:
@@ -72,20 +86,13 @@ class Discount(models.Model):
         return f"{self.name} ({self.code})"
     
 class CatalogItem(models.Model):
-    """
-    One pickable item that *bundles* a job_rate + base_setting,
-    plus sensible defaults for hours and quantity.
-    """
     code         = models.SlugField(max_length=80, unique=True)
     name         = models.CharField(max_length=160)
     description  = models.TextField(blank=True)
-
     job_rate     = models.ForeignKey(JobRate, on_delete=models.PROTECT, related_name="catalog_items")
     base_setting = models.ForeignKey(BaseSetting, on_delete=models.PROTECT, related_name="catalog_items")
-
     default_hours    = models.DecimalField(max_digits=8, decimal_places=2, default=Decimal("1.00"))
     default_quantity = models.DecimalField(max_digits=8, decimal_places=2, default=Decimal("1.00"))
-
     is_active   = models.BooleanField(default=True)
     tags        = models.CharField(max_length=200, blank=True)
     sort_order  = models.PositiveIntegerField(default=0)
@@ -97,18 +104,10 @@ class CatalogItem(models.Model):
         return f"{self.name} [{self.code}]"
 
 class CostTier(models.Model):
-    """
-    Buckets a project by total cost. Used for quick 'walkaway' estimates.
-    Example tiers:
-      - Tier 1:  500 – 1,250
-      - Tier 2:  1,251 – 3,000
-      - Tier 3:  3,001 – 7,500
-    """
-    code        = models.SlugField(max_length=40, unique=True)   # e.g., "tier-1"
-    label       = models.CharField(max_length=80)                # e.g., "Tier 1"
+    code        = models.SlugField(max_length=40, unique=True)
+    label       = models.CharField(max_length=80)
     min_total   = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
-    max_total   = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True,
-                                      help_text="Leave blank for 'no upper limit'.")
+    max_total   = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True, help_text="Leave blank for 'no upper limit'.")
     notes       = models.TextField(blank=True)
     sort_order  = models.PositiveIntegerField(default=0)
     is_active   = models.BooleanField(default=True)
@@ -127,17 +126,8 @@ class CostTier(models.Model):
 
     @classmethod
     def for_amount(cls, amount: Decimal):
-        """
-        Return the active tier that contains 'amount', or None.
-        Inclusive lower bound; inclusive upper bound if provided.
-        """
         amount = Decimal(amount or 0)
-        # Try exact window first
-        tier = (cls.objects
-                  .filter(is_active=True, min_total__lte=amount)
-                  .filter(models.Q(max_total__isnull=True) | models.Q(max_total__gte=amount))
-                  .order_by("sort_order", "min_total")
-                  .first())
+        tier = (cls.objects.filter(is_active=True, min_total__lte=amount).filter(models.Q(max_total__isnull=True) | models.Q(max_total__gte=amount)).order_by("sort_order", "min_total").first())
         return tier
 
 
@@ -150,44 +140,73 @@ class ProposalDraft(models.Model):
         NONE    = "NONE",    "None"
         PERCENT = "PERCENT", "Percent"
         FIXED   = "FIXED",   "Fixed"
+    
+    class ApprovalStatus(models.TextChoices):
+        DRAFT     = "DRAFT",     "Draft"
+        SUBMITTED = "SUBMITTED", "Submitted"
+        APPROVED  = "APPROVED",  "Approved"
+        REJECTED  = "REJECTED",  "Rejected"
 
-    company    = models.ForeignKey("companyApp.Company", on_delete=models.CASCADE, related_name="pricing_drafts")
+    company = models.ForeignKey("companyApp.Company", on_delete=models.CASCADE, related_name="pricing_drafts")
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
-
-    title     = models.CharField(max_length=200)
-    currency  = models.CharField(max_length=8, default="USD")
-
-    # Optional quick contact capture before there’s a formal contact
-    contact_name  = models.CharField(max_length=160, blank=True)
+    approval_status = models.CharField(max_length=12, choices=ApprovalStatus.choices, default=ApprovalStatus.DRAFT, db_index=True,)
+    title = models.CharField(max_length=200)
+    currency = models.CharField(max_length=8, default="USD")
+    contact_name = models.CharField(max_length=160, blank=True)
     contact_email = models.EmailField(blank=True)
 
     # Totals
-    subtotal        = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
-    discount        = models.ForeignKey(Discount, null=True, blank=True, on_delete=models.SET_NULL)
+    subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+    discount = models.ForeignKey(Discount, null=True, blank=True, on_delete=models.SET_NULL)
     discount_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
-    total           = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+    total = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
 
     # Deposit
-    deposit_type    = models.CharField(max_length=10, choices=DepositType.choices, default=DepositType.NONE)
-    deposit_value   = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))  # percent or fixed
-    deposit_amount  = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
-    remaining_due   = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+    deposit_type  = models.CharField(max_length=10, choices=DepositType.choices, default=DepositType.NONE)
+    deposit_value = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+    deposit_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+    remaining_due = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
 
     # Estimate / Tiering
-    estimate_tier  = models.ForeignKey("CostTier", null=True, blank=True, on_delete=models.SET_NULL, related_name="drafts")
-    estimate_low   = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
-    estimate_high  = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+    estimate_tier = models.ForeignKey("CostTier", null=True, blank=True, on_delete=models.SET_NULL, related_name="drafts")
+    estimate_low = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+    estimate_high = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
 
-    estimate_manual = models.BooleanField(
-        default=False,
-        help_text="If checked, keep the selected tier and don't auto-update from totals."
-    )
+    estimate_manual = models.BooleanField(default=False, help_text="If checked, keep the selected tier and don't auto-update from totals.")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    approved_at = models.DateTimeField(null=True, blank=True)
+    approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="proposal_drafts_approved")
+    approval_notes = models.TextField(blank=True)
+
     class Meta:
         ordering = ("-created_at",)
+
+    def mark_submitted(self, actor=None, save=True):
+        self.approval_status = self.ApprovalStatus.SUBMITTED
+        self.submitted_at = timezone.now()
+        if save:
+            self.save(update_fields=["approval_status", "submitted_at", "updated_at"])
+
+    def mark_approved(self, actor=None, notes=None, save=True):
+        self.approval_status = self.ApprovalStatus.APPROVED
+        self.approved_at = timezone.now()
+        if actor:
+            self.approved_by = actor
+        if notes:
+            self.approval_notes = notes
+        if save:
+            self.save(update_fields=["approval_status", "approved_at", "approved_by", "approval_notes", "updated_at"])
+
+    def mark_rejected(self, actor=None, notes=None, save=True):
+        self.approval_status = self.ApprovalStatus.REJECTED
+        if notes:
+            self.approval_notes = notes
+        if save:
+            self.save(update_fields=["approval_status", "approval_notes", "updated_at"])
 
     def __str__(self):
         return f"Draft: {self.company.name} · {self.title}"
@@ -226,14 +245,14 @@ class ProposalDraft(models.Model):
         amount = self.total if use_total else self.subtotal
 
         if self.estimate_manual and self.estimate_tier_id:
-            tier = self.estimate_tier  # respect manual choice
+            tier = self.estimate_tier
         else:
             tier = CostTier.for_amount(amount)
-            self.estimate_tier = tier  # auto-pick
+            self.estimate_tier = tier
 
         if tier:
             self.estimate_low = tier.min_total or Decimal("0.00")
-            self.estimate_high = tier.max_total or amount  # if open-ended, show current as an 'up to'
+            self.estimate_high = tier.max_total or amount
         else:
             self.estimate_low = Decimal("0.00")
             self.estimate_high = Decimal("0.00")
@@ -252,16 +271,13 @@ class ProposalDraft(models.Model):
         self.discount_amount = q2(self.compute_discount_amount(self.subtotal))
 
         base_total = q2(self.subtotal - self.discount_amount)
-        self.total = base_total  # no tax layer yet; easy to add later
+        self.total = base_total
 
         self.deposit_amount = q2(self.compute_deposit_amount(self.total))
         self.remaining_due  = q2(self.total - self.deposit_amount)
 
         if save:
-            self.save(update_fields=[
-                "subtotal", "discount_amount", "total",
-                "deposit_amount", "remaining_due", "updated_at"
-            ])
+            self.save(update_fields=["subtotal", "discount_amount", "total", "deposit_amount", "remaining_due", "updated_at"])
         self.update_estimate_from_tiers(save=True)
         return self.total
 
@@ -277,7 +293,7 @@ class ProposalDraft(models.Model):
             title=self.title,
             currency=self.currency,
             amount_subtotal=self.subtotal,
-            amount_tax=Decimal("0.00"),          # no tax layer in draft yet; safe default
+            amount_tax=Decimal("0.00"),
             discount_total=self.discount_amount,
             amount_total=self.total,
             deposit_type=self.deposit_type,
@@ -286,8 +302,10 @@ class ProposalDraft(models.Model):
             remaining_due=self.remaining_due,
             converted_from=self,
         )
-        # Snapshot draft items → proposal items.
-        # Also populate unit_price/subtotal so invoiceApp can copy directly.
+        if self.approved_by_id and not getattr(prop, "approver_user_id", None):
+            prop.approver_user_id = self.approved_by_id
+            prop.save(update_fields=["approver_user"])
+
         for li in self.items.all().order_by("sort_order", "pk"):
             ProposalLineItem.objects.create(
                 proposal=prop,
@@ -299,12 +317,10 @@ class ProposalDraft(models.Model):
                 job_rate=li.job_rate,
                 base_setting=li.base_setting,
                 line_total=li.line_total,
-                # Invoice-compat fields:
-                unit_price=li.line_total,   # treat as a single unit price
-                subtotal=li.line_total,     # quantity considered 1 for invoice copy
+                unit_price=li.line_total,
+                subtotal=li.line_total,
             )
 
-        # Snapshot discount (if any) so invoiceApp can copy applied_discounts
         if self.discount and self.discount_amount:
             ProposalAppliedDiscount.objects.create(
                 proposal=prop,
@@ -326,9 +342,8 @@ class DraftItem(models.Model):
     then only adjust hours and quantity. Name/description/job_rate/base_setting are snapshotted
     from the catalog for transparency and stability.
     """
-    draft        = models.ForeignKey(ProposalDraft, on_delete=models.CASCADE, related_name="items")
+    draft = models.ForeignKey(ProposalDraft, on_delete=models.CASCADE, related_name="items")
 
-    # Pickable preset that bundles job_rate + base_setting (+ defaults)
     catalog_item = models.ForeignKey(
         "CatalogItem",
         on_delete=models.PROTECT,
@@ -336,15 +351,12 @@ class DraftItem(models.Model):
         help_text="Choose from the predefined items list."
     )
 
-    # Snapshotted display fields (auto-filled from catalog)
     name         = models.CharField(max_length=160)
     description  = models.TextField(blank=True)
 
-    # Snapshotted pricing components (auto-set from catalog)
     job_rate     = models.ForeignKey(JobRate, on_delete=models.PROTECT, related_name="draft_items")
     base_setting = models.ForeignKey(BaseSetting, on_delete=models.PROTECT, related_name="draft_items")
 
-    # Only these are editable per draft
     hours    = models.DecimalField(max_digits=8, decimal_places=2, default=Decimal("1.00"))
     quantity = models.DecimalField(max_digits=8, decimal_places=2, default=Decimal("1.00"))
 
@@ -368,7 +380,6 @@ class DraftItem(models.Model):
         c = self.catalog_item
         if not c:
             return
-        # snapshot identity/pricing bits
         self.name = c.name
         self.description = c.description
         self.job_rate = c.job_rate
@@ -416,12 +427,7 @@ class Proposal(models.Model):
     company     = models.ForeignKey("companyApp.Company", on_delete=models.CASCADE, related_name="simple_proposals")
     created_by  = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
 
-    allowed_users = models.ManyToManyField(
-        settings.AUTH_USER_MODEL,
-        through="ProposalViewer",
-        related_name="proposals_shared_with",
-        blank=True,
-    )
+    allowed_users = models.ManyToManyField(settings.AUTH_USER_MODEL, through="ProposalViewer", related_name="proposals_shared_with", blank=True,)
 
     def __str__(self):
         return f"Proposal {self.code} — {self.company.name}"
@@ -430,7 +436,7 @@ class Proposal(models.Model):
     currency    = models.CharField(max_length=8, default="USD")
 
     amount_subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
-    amount_tax      = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))  # << added
+    amount_tax      = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     discount_total  = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     amount_total    = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
 
@@ -441,6 +447,8 @@ class Proposal(models.Model):
 
     converted_from = models.ForeignKey(ProposalDraft, null=True, blank=True, on_delete=models.SET_NULL, related_name="proposals")
 
+    pdf = models.FileField(upload_to=proposal_pdf_upload_to, null=True, blank=True, validators=[FileExtensionValidator(ALLOWED_PROPOSAL_PDF_EXTS), validate_proposal_pdf_size], help_text="Upload a finalized PDF; optional if you generate on the fly.")
+
     # Signing fields
     sign_token       = models.CharField(max_length=64, unique=True, blank=True)
     token_expires_at = models.DateTimeField(null=True, blank=True)
@@ -449,6 +457,23 @@ class Proposal(models.Model):
     sent_at    = models.DateTimeField(null=True, blank=True)
     viewed_at  = models.DateTimeField(null=True, blank=True)
     signed_at  = models.DateTimeField(null=True, blank=True)
+
+    # --- Approver / countersign tracking ---
+    approver_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name="proposals_to_countersign",
+        help_text="Employee who approved the draft and should countersign after client signs."
+    )
+    countersign_required = models.BooleanField(
+        default=True,
+        help_text="If true, an internal countersign is required after the client signs."
+    )
+    countersigned_at = models.DateTimeField(null=True, blank=True)
+    countersigned_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name="proposals_countersigned"
+    )
+    countersign_notes = models.TextField(blank=True)
 
     created_at  = models.DateTimeField(auto_now_add=True)
     updated_at  = models.DateTimeField(auto_now=True)
@@ -553,6 +578,63 @@ class Proposal(models.Model):
         # inv.minimum_due = self.deposit_amount or Decimal("0.00")
         # inv.save(update_fields=["minimum_due", "updated_at"])
         return inv
+    
+    @property
+    def countersign_due(self) -> bool:
+        return bool(self.countersign_required and self.signed_at and not self.countersigned_at)
+
+    def mark_countersigned(self, actor=None, notes=None, save=True):
+        self.countersigned_at = timezone.now()
+        if actor:
+            self.countersigned_by = actor
+        if notes:
+            self.countersign_notes = (self.countersign_notes + "\n" if self.countersign_notes else "") + str(notes)
+        if save:
+            self.save(update_fields=["countersigned_at", "countersigned_by", "countersign_notes", "updated_at"])
+    
+    def create_project(self, *, actor=None, manager=None, kickoff_today=False, name=None):
+        """
+        Materialize a Project from this signed proposal.
+        - Ensures (company, name) is unique
+        - Defaults manager to approver/creator if they’re staff
+        - Optionally sets start_date to today
+        Returns the created Project (or the first existing one if already linked).
+        """
+        # Local import avoids circulars
+        from projectApp.models import Project
+        from django.utils import timezone
+
+        # If you’ve already made one for this proposal, just return it
+        existing = getattr(self, "projects", None)
+        if existing and existing.exists():
+            return existing.order_by("pk").first()
+
+        # Pick a default manager: approver → created_by → actor (only if staff)
+        mgr = manager or getattr(self, "approver_user", None) or getattr(self, "created_by", None) or actor
+        if not (getattr(mgr, "is_staff", False) or getattr(mgr, "is_superuser", False)):
+            mgr = None
+
+        base = (name or self.title or "Project").strip()[:200]
+        unique_name = base
+        i = 2
+        while Project.objects.filter(company=self.company, name=unique_name).exists():
+            unique_name = f"{base} ({i})"
+            i += 1
+
+        with transaction.atomic():
+            kwargs = dict(
+                company=self.company,
+                proposal=self,
+                name=unique_name,
+                created_by=actor or getattr(self, "created_by", None),
+            )
+            if mgr:
+                kwargs["manager"] = mgr
+            if kickoff_today:
+                kwargs["start_date"] = timezone.now().date()
+
+            proj = Project.objects.create(**kwargs)
+            return proj
 
 
 class ProposalLineItem(models.Model):

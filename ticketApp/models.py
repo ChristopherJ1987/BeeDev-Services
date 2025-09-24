@@ -108,8 +108,14 @@ class TicketMessage(models.Model):
 
     def __str__(self):
         return f"{self.ticket.public_key}: {self.author_kind} ({'internal' if self.is_internal else 'shared'})"
+    
+    def clean(self):
+        # Clients cannot create internal-only messages
+        if self.author_kind == self.AuthorKind.CLIENT and self.is_internal:
+            raise ValidationError({"is_internal": "Client messages cannot be marked internal."})
 
     def save(self, *args, **kwargs):
+        self.full_clean(exclude=None)
         super().save(*args, **kwargs)
         # Update ticket “last client reply” for SLA/reporting
         if self.author_kind == self.AuthorKind.CLIENT and not self.is_internal:

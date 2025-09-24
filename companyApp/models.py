@@ -1,5 +1,5 @@
 # companyApp/models.py
-import os, uuid, datetime
+import os, uuid, datetime, re
 from django.db import models
 from django.conf import settings
 from django.core.validators import FileExtensionValidator
@@ -109,7 +109,7 @@ class Company(models.Model):
             models.Index(fields=["status"]),
             models.Index(fields=["pipeline_status"]),
         ]
-        # REMOVED the bad constraints block that referenced fields not on Company.
+        # (No bad constraints here)
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -275,3 +275,118 @@ class CompanyLink(models.Model):
 
     def __str__(self):
         return f"{self.company.name}: {self.label}"
+
+
+# =======================================================================
+#                          DNC (Do Not Contact)
+# =======================================================================
+class DncReason(models.Model):
+    code       = models.CharField(max_length=50, unique=True)
+    label      = models.CharField(max_length=120)
+    description = models.TextField(blank=True)
+    is_active  = models.BooleanField(default=True)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("sort_order", "label")
+        indexes = [models.Index(fields=["is_active", "sort_order"])]
+
+    def __str__(self):
+        return f"{self.label} ({self.code})"
+
+
+class DncEntry(models.Model):
+    class Channel(models.TextChoices):
+        EMAIL = "EMAIL", "Email"
+        PHONE = "PHONE", "Phone"
+
+    # Attach to either/both a user or a prospect contact
+    user    = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name="dnc_entries"
+    )
+    contact = models.ForeignKey(
+        "companyApp.CompanyContact", null=True, blank=True,
+        on_delete=models.SET_NULL, related_name="dnc_entries"
+    )
+
+    channel = models.CharField(max_length=10, choices=Channel.choices)
+    value_raw = models.CharField(max_length=254, help_text="Original value as entered")
+    value_normalized = models.CharField(max_length=254, editable=False)
+
+    reason = models.ForeignKey(DncReason, null=True, blank=True, on_delete=models.SET_NULL, related_name="entries")
+    notes  = models.TextField(blank=True)
+
+    is_active = models.BooleanField(default=True)
+    source    = models.CharField(max_length=40, blank=True, help_text="e.g., user_request, bounce, manual")
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name="dnc_created"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("-is_active", "channel", "value_normalized")
+        unique_together = (("channel", "value_normalized", "is_active"),)  # no two active entries for same value/channel
+        indexes = [
+            models.Index(fields=["channel", "value_normalized", "is_active"]),
+            models.Index(fields=["user", "is_active"]),
+            models.Index(fields=["contact", "is_active"]),
+        ]
+
+    # --- normalization helpers ---
+    @staticmethod
+    def _norm_email(v: str) -> str:
+        return (v or "").strip().lower()
+
+    @staticmethod
+    def _norm_phone(v: str) -> str:
+        # basic normalization: keep digits only
+        return re.sub(r"\D+", "", v or "")
+
+    def clean(self):
+        super().clean()
+        if not self.user_id and not self.contact_id:
+            raise ValidationError("Attach DNC to a User and/or a CompanyContact.")
+        if not self.value_raw:
+            raise ValidationError({"value_raw": "This field is required."})
+
+        # normalize
+        if self.channel == self.Channel.EMAIL:
+            self.value_normalized = self._norm_email(self.value_raw)
+        elif self.channel == self.Channel.PHONE:
+            self.value_normalized = self._norm_phone(self.value_raw)
+        else:
+            raise ValidationError({"channel": "Unknown channel."})
+
+        if not self.value_normalized:
+            raise ValidationError({"value_raw": "Provide a valid value."})
+
+        # Enforce only one ACTIVE entry per (channel, normalized)
+        if self.is_active:
+            qs = DncEntry.objects.filter(
+                channel=self.channel,
+                value_normalized=self.value_normalized,
+                is_active=True,
+            )
+            if self.pk:
+                qs = qs.exclude(pk=self.pk)
+            if qs.exists():
+                raise ValidationError({"value_raw": "An active DNC already exists for this value."})
+
+    def save(self, *args, **kwargs):
+        # ensure normalized is set even if admin bypasses full_clean in some paths
+        if self.channel == self.Channel.EMAIL:
+            self.value_normalized = self._norm_email(self.value_raw)
+        elif self.channel == self.Channel.PHONE:
+            self.value_normalized = self._norm_phone(self.value_raw)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        target = self.user or self.contact or "value"
+        return f"DNC {self.channel} {self.value_normalized} ({target})"

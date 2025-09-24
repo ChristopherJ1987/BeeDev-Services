@@ -4,6 +4,8 @@ from decimal import Decimal
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
+from django.contrib.auth import get_user_model
+from django.core.validators import URLValidator
 from django.core.validators import FileExtensionValidator
 from django.core.exceptions import ValidationError
 
@@ -74,6 +76,14 @@ class Invoice(models.Model):
         related_name="invoices_shared_with",
         blank=True,
     )
+
+    # ---- Stripe references (optional) ----
+    stripe_customer_id          = models.CharField(max_length=64, blank=True, db_index=True)
+    stripe_invoice_id           = models.CharField(max_length=64, blank=True, db_index=True)
+    stripe_checkout_session_id  = models.CharField(max_length=64, blank=True, db_index=True)
+    stripe_payment_intent_id    = models.CharField(max_length=64, blank=True, db_index=True)
+    stripe_hosted_invoice_url   = models.URLField(blank=True)
+    stripe_status               = models.CharField(max_length=32, blank=True)  # e.g., 'draft','open','paid','void','uncollectible'
 
     def __str__(self):
         return f"Invoice {self.number} — {self.company.name}"
@@ -214,11 +224,12 @@ class InvoiceAppliedDiscount(models.Model):
 # =======================================================================
 class Payment(models.Model):
     class Method(models.TextChoices):
-        CARD  = "CARD",  "Card"
-        ACH   = "ACH",   "ACH / Bank"
-        CHECK = "CHECK", "Check"
-        CASH  = "CASH",  "Cash"
-        OTHER = "OTHER", "Other"
+        CARD   = "CARD",   "Card"
+        ACH    = "ACH",    "ACH / Bank"
+        CHECK  = "CHECK",  "Check"
+        CASH   = "CASH",   "Cash"
+        STRIPE = "STRIPE", "Stripe"
+        OTHER  = "OTHER",  "Other"
 
     invoice     = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name="payments")
     amount      = models.DecimalField(max_digits=12, decimal_places=2)
@@ -231,6 +242,15 @@ class Payment(models.Model):
     received_at = models.DateTimeField(default=timezone.now)
     notes       = models.TextField(blank=True)
     created_by  = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="payments_recorded")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    # ---- Stripe references on the payment row ----
+    stripe_payment_intent_id   = models.CharField(max_length=64, blank=True, db_index=True)
+    stripe_charge_id           = models.CharField(max_length=64, blank=True, db_index=True)
+    stripe_payment_method_id   = models.CharField(max_length=64, blank=True, db_index=True)
+    stripe_receipt_url         = models.URLField(blank=True)
+    gateway_payload            = models.JSONField(blank=True, default=dict)
+    gateway_status             = models.CharField(max_length=32, blank=True)
 
     created_at  = models.DateTimeField(auto_now_add=True)
 
