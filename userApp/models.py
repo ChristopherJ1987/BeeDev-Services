@@ -19,6 +19,7 @@ def avatar_upload_to(instance, filename):
     """
     Store at: media/profiles/YYYY/MM/<userId>-<uuid>.<ext>
     Non-allowed extensions are coerced to .jpg (validation still enforces allowed types).
+    Works for both ClientProfile and EmployeeProfile (expects .user).
     """
     ext = os.path.splitext(filename)[1].lower().lstrip(".") or "jpg"
     if ext not in ALLOWED_IMAGE_EXTS:
@@ -51,6 +52,7 @@ class CustomUserManager(BaseUserManager):
             raise ValueError("Superuser must have is_superuser=True.")
         return self.create_user(username, email, password, **extra_fields)
 
+
 class User(AbstractUser):
     class Roles(models.TextChoices):
         EMPLOYEE = "EMPLOYEE", "Employee"
@@ -67,7 +69,7 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
-    # --- Helpers ---
+    # --- Name helpers ---
     @property
     def preferred_name(self) -> str:
         """First name if present; otherwise username."""
@@ -75,7 +77,7 @@ class User(AbstractUser):
 
     @property
     def display_name(self) -> str:
-        """Full name if present; otherwise username (nice for UI)."""
+        """Full name if present; otherwise username."""
         full = f"{(self.first_name or '').strip()} {(self.last_name or '').strip()}".strip()
         return full or self.username
 
@@ -83,6 +85,7 @@ class User(AbstractUser):
         # legacy helper; Django also has get_full_name()
         return f"{self.first_name} {self.last_name}"
 
+    # --- Avatar helper ---
     @property
     def avatar_url(self) -> str:
         """
@@ -105,10 +108,50 @@ class User(AbstractUser):
             pass
         return static("img/avatar.svg")  # ensure this exists in your static files
 
+    # --- Company / membership helpers (multi-company) ---
+    def companies_qs(self):
+        """
+        Active companies this user belongs to (via companyApp.CompanyMembership).
+        """
+        from companyApp.models import Company  # local import avoids circulars
+        return Company.objects.filter(memberships__user=self, memberships__is_active=True)
+
+    def membership_for(self, company):
+        """
+        Return CompanyMembership or None for a given company.
+        """
+        return getattr(self, "company_memberships", None).filter(company=company, is_active=True).first()
+
+    def is_company_admin(self, company):
+        """
+        True if Account Admin or Manager for this company.
+        """
+        mem = self.membership_for(company)
+        if not mem:
+            return False
+        return mem.role in {"ACCOUNT_ADMIN", "MANAGER"}
+
+    def can_view_company_invoices(self, company):
+        mem = self.membership_for(company)
+        if not mem:
+            return False
+        return mem.role in {"ACCOUNT_ADMIN", "MANAGER"} or mem.can_view_invoices
+
+    def can_view_company_proposals(self, company):
+        mem = self.membership_for(company)
+        if not mem:
+            return False
+        return mem.role in {"ACCOUNT_ADMIN", "MANAGER"} or mem.can_view_proposals
+
+
 # =======================================================================
 #                             PROFILES
 # =======================================================================
 class ClientProfile(models.Model):
+    """
+    Client profile is now company-agnostic; company membership is modeled by companyApp.CompanyMembership.
+    Keep free-form company_* fields for pre-signup imports or defaults.
+    """
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile")
 
     # Profile image
@@ -120,18 +163,14 @@ class ClientProfile(models.Model):
         help_text="JPEG/PNG/WebP, up to 3MB.",
     )
 
-    # Link to companyApp.Company (keep local company_* fields for pre-signup/backup)
-    company = models.ForeignKey(
-        "companyApp.Company", null=True, blank=True,
-        on_delete=models.SET_NULL, related_name="client_profiles"
-    )
+    # ---- NO company FK here (multi-company via memberships) ----
 
-    # Company / contact
+    # Optional company/contact defaults (not authoritative)
     company_name  = models.CharField(max_length=200, blank=True)
-    company_email = models.EmailField(blank=True)  # optional, separate from user.email
+    company_email = models.EmailField(blank=True)  # separate from user.email
     phone         = models.CharField(max_length=30, blank=True)
 
-    # Address
+    # Address (billing/contact default)
     address_line1 = models.CharField(max_length=200, blank=True)
     address_line2 = models.CharField(max_length=200, blank=True)
     city          = models.CharField(max_length=120, blank=True)
@@ -145,6 +184,11 @@ class ClientProfile(models.Model):
 
     def __str__(self):
         return f"Profile for {self.user.username}"
+
+    # Convenience: companies via memberships
+    def companies_qs(self):
+        return self.user.companies_qs()
+
 
 class EmployeeProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="employee_profile")

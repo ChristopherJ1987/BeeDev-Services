@@ -2,7 +2,9 @@
 from decimal import Decimal
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Invoice, InvoiceLineItem, InvoiceAppliedDiscount, Payment
+
+from .models import Invoice, InvoiceLineItem, InvoiceAppliedDiscount, Payment, InvoiceViewer
+from companyApp.models import CompanyMembership  # for filtering allowed users
 
 # ---- permission helpers (same pattern) ----
 def is_owner(u):
@@ -24,11 +26,13 @@ class InvoiceLineItemInline(admin.TabularInline):
     fields = ("sort_order", "name", "description", "quantity", "unit_price", "subtotal")
     readonly_fields = ()
 
+
 class InvoiceAppliedDiscountInline(admin.TabularInline):
     model = InvoiceAppliedDiscount
     extra = 0
     fields = ("discount_code", "name", "kind", "value", "amount_applied", "sort_order")
     readonly_fields = ()
+
 
 class PaymentInline(admin.TabularInline):
     model = Payment
@@ -46,13 +50,34 @@ class PaymentInline(admin.TabularInline):
         return is_owner(request.user) or is_admin(request.user)
 
 
+class InvoiceViewerInline(admin.TabularInline):
+    """
+    Per-invoice visibility overrides. Only members of the invoice's company
+    should be selectable in the 'user' dropdown.
+    """
+    model = InvoiceViewer
+    extra = 0
+    autocomplete_fields = ("user",)
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        field = super().formfield_for_foreignkey(db_field, request, **kwargs)
+        if db_field.name == "user":
+            inv = getattr(request, "_current_invoice_obj", None)
+            if inv and inv.pk:
+                member_user_ids = CompanyMembership.objects.filter(
+                    company=inv.company, is_active=True
+                ).values_list("user_id", flat=True)
+                field.queryset = field.queryset.filter(pk__in=member_user_ids)
+        return field
+
+
 @admin.register(Invoice)
 class InvoiceAdmin(admin.ModelAdmin):
     list_display = ("number", "company", "customer_user", "status", "total", "amount_paid", "balance_display", "due_date", "updated_at")
     list_filter  = ("status", "currency")
     search_fields = ("number", "company__name", "customer_user__username", "customer_user__email")
     autocomplete_fields = ("company", "proposal", "customer_user", "customer_contact", "created_by")
-    inlines = [InvoiceLineItemInline, InvoiceAppliedDiscountInline, PaymentInline]
+    inlines = [InvoiceLineItemInline, InvoiceAppliedDiscountInline, PaymentInline, InvoiceViewerInline]
 
     fieldsets = (
         ("Header", {"fields": ("number", "company", "proposal", "customer_user", "customer_contact", "currency", "issue_date", "due_date", "status")}),
@@ -65,21 +90,24 @@ class InvoiceAdmin(admin.ModelAdmin):
     actions = ["recalc_totals_action", "refresh_status_action"]
 
     def balance_display(self, obj):
-            value = obj.balance_due or Decimal("0.00")
-            # Pre-format, then inject safely
-            return format_html("<b>{}</b>", f"{value:.2f}")
+        value = obj.balance_due or Decimal("0.00")
+        return format_html("<b>{}</b>", f"{value:.2f}")
     balance_display.short_description = "Balance Due"
 
     # Permissions
     def has_module_permission(self, request): return request.user.is_staff
     def has_add_permission(self, request): return is_owner(request.user) or is_admin(request.user)
     def has_change_permission(self, request, obj=None):
-        # Owner/Admin edit; HR can edit (record payments, adjust amounts); others read-only
         if is_owner(request.user) or is_admin(request.user):
             return True
         return False
     def has_delete_permission(self, request, obj=None):
         return is_owner(request.user) or is_admin(request.user)
+
+    # Make current object available to inlines for filtering choices
+    def get_form(self, request, obj=None, **kwargs):
+        request._current_invoice_obj = obj
+        return super().get_form(request, obj, **kwargs)
 
     def save_model(self, request, obj, form, change):
         if not change and not obj.created_by_id:

@@ -50,6 +50,14 @@ class Company(models.Model):
     name  = models.CharField(max_length=200, unique=True)
     slug  = models.SlugField(max_length=220, unique=True, blank=True)
 
+    # convenience M2M via membership
+    users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        through="CompanyMembership",
+        related_name="companies",
+        blank=True,
+    )
+
     # Pre-account primary contact info (optional; use CompanyContact for multiples)
     primary_contact_name = models.CharField(max_length=120, blank=True)
     primary_email        = models.EmailField(blank=True)
@@ -101,6 +109,7 @@ class Company(models.Model):
             models.Index(fields=["status"]),
             models.Index(fields=["pipeline_status"]),
         ]
+        # REMOVED the bad constraints block that referenced fields not on Company.
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -130,6 +139,39 @@ class Company(models.Model):
         except Exception:
             pass
         return static("img/company-logo-placeholder.svg")
+    
+
+class CompanyMembership(models.Model):
+    class Role(models.TextChoices):
+        ACCOUNT_ADMIN = "ACCOUNT_ADMIN", "Account Admin"   # was OWNER
+        MANAGER       = "MANAGER",       "Manager"
+        MEMBER        = "MEMBER",        "Member"
+        BILLING_ONLY  = "BILLING_ONLY",  "Billing Only"
+        READ_ONLY     = "READ_ONLY",     "Read Only"
+
+    company = models.ForeignKey("companyApp.Company", on_delete=models.CASCADE, related_name="memberships")
+    user    = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="company_memberships")
+
+    role = models.CharField(max_length=24, choices=Role.choices, default=Role.MEMBER)
+
+    # visibility defaults (owners/admins can still toggle per-user)
+    can_view_proposals = models.BooleanField(default=False)
+    can_view_invoices  = models.BooleanField(default=False)
+    can_open_tickets   = models.BooleanField(default=True)
+
+    is_active = models.BooleanField(default=True)
+    added_at  = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [("company", "user")]
+        indexes = [
+            models.Index(fields=["company", "user", "is_active"]),
+            models.Index(fields=["company", "role"]),
+        ]
+
+    def is_admin(self):
+        return self.role in {self.Role.ACCOUNT_ADMIN, self.Role.MANAGER}
+
 
 # =======================================================================
 #                          COMPANY CONTACT
@@ -145,12 +187,12 @@ class CompanyContact(models.Model):
         on_delete=models.SET_NULL, related_name="company_contacts"
     )
 
-    name      = models.CharField(max_length=120)
-    email     = models.EmailField(blank=True)
-    phone     = models.CharField(max_length=30, blank=True)
-    title     = models.CharField(max_length=120, blank=True)
+    name       = models.CharField(max_length=120)
+    email      = models.EmailField(blank=True)
+    phone      = models.CharField(max_length=30, blank=True)
+    title      = models.CharField(max_length=120, blank=True)
     is_primary = models.BooleanField(default=False)
-    notes     = models.TextField(blank=True)
+    notes      = models.TextField(blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -163,8 +205,21 @@ class CompanyContact(models.Model):
             models.Index(fields=["company", "email"]),
         ]
 
+    def clean(self):
+        """
+        MySQL-safe enforcement: at most one primary contact per company.
+        """
+        super().clean()
+        if self.is_primary and self.company_id:
+            qs = CompanyContact.objects.filter(company_id=self.company_id, is_primary=True)
+            if self.pk:
+                qs = qs.exclude(pk=self.pk)
+            if qs.exists():
+                raise ValidationError({"is_primary": "This company already has a primary contact."})
+
     def __str__(self):
         return f"{self.company.name}: {self.name}"
+
 
 # =======================================================================
 #                          COMPANY LINK

@@ -416,6 +416,16 @@ class Proposal(models.Model):
     company     = models.ForeignKey("companyApp.Company", on_delete=models.CASCADE, related_name="simple_proposals")
     created_by  = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
 
+    allowed_users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        through="ProposalViewer",
+        related_name="proposals_shared_with",
+        blank=True,
+    )
+
+    def __str__(self):
+        return f"Proposal {self.code} — {self.company.name}"
+
     title       = models.CharField(max_length=200)
     currency    = models.CharField(max_length=8, default="USD")
 
@@ -424,8 +434,7 @@ class Proposal(models.Model):
     discount_total  = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     amount_total    = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
 
-    deposit_type   = models.CharField(max_length=10, default=ProposalDraft.DepositType.NONE,
-                                      choices=ProposalDraft.DepositType.choices)
+    deposit_type   = models.CharField(max_length=10, default=ProposalDraft.DepositType.NONE, choices=ProposalDraft.DepositType.choices)
     deposit_value  = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     deposit_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     remaining_due  = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
@@ -604,6 +613,17 @@ class ProposalRecipient(models.Model):
 
     def __str__(self):
         return f"{self.email} · {self.proposal}"
+    
+class ProposalViewer(models.Model):
+    proposal = models.ForeignKey(Proposal, on_delete=models.CASCADE, related_name="allowed_viewers")
+    user     = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="allowed_proposals")
+
+    class Meta:
+        unique_together = [("proposal", "user")]
+        indexes = [models.Index(fields=["proposal", "user"])]
+
+    def __str__(self):
+        return f"{self.user} can view {self.proposal}"
 
 
 class ProposalEvent(models.Model):
