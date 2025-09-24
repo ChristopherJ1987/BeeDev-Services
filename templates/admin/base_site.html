@@ -11,6 +11,13 @@
   <link rel="stylesheet" href="{% static 'admin/beedev.css' %}">
 {% endblock %}
 
+{% block extrahead %}
+  {{ block.super }}
+  <link rel="shortcut icon" href="{% static 'images/favicon.png' %}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'images/apple-touch-icon.png' %}">
+  {# Optional cache-bust in dev: append ?v={{ now "U" }} #}
+{% endblock %}
+
 {# Replace the default “Django administration” header #}
 {% block branding %}
   <h1 class="admin_header">

@@ -16,7 +16,7 @@
     <table class="entry">
         <tr>
             <th>Company Name</th>
-            <td>{{draft.company}}</td>
+            <td><a href="{% url 'company_staff:detail' draft.company_id %}">{{draft.company}}</a></td>
         </tr>
         <tr>
             <th>Contact</th>

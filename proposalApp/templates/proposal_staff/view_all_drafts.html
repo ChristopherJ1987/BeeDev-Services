@@ -21,7 +21,7 @@
     {% for d in drafts %}
         <tr>
             <td><a href="{% url 'proposal_staff:detail' d.pk %}">{{d.title}}</a></td>
-            <td>{{d.company}}</td>
+            <td><a href="{% url 'company_staff:detail' d.company_id %}">{{d.company}}</a></td>
             <td>{{d.estimate_low}} - {{d.estimate_high}}</td>
             <td>{{d.total}}</td>
         </tr>

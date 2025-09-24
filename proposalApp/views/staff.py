@@ -14,7 +14,7 @@ def view_all_drafts(request):
         raise PermissionDenied("Not allowed")
     
     drafts = ProposalDraft.objects.all()
-    title = "Proposal Drafts"
+    title = "Proposals & Drafts"
     ctx = {"user_obj": user, "read_only": True, "drafts": drafts}
     ctx.update(base_ctx(request, title=title))
     ctx["page_heading"] = title
