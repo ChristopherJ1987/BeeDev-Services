@@ -105,3 +105,16 @@ body main .info .entry td {
   text-align: left;
   padding-left: 0.5em;
 }
+body main .info .alt_entry {
+  width: 100%;
+  margin: 1em 0;
+}
+body main .info .alt_entry td {
+  width: 50%;
+  text-align: left;
+  padding-left: 0.5em;
+}
+body main .info .alt_entry th {
+  width: 50%;
+  text-align: center;
+}

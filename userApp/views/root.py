@@ -34,7 +34,7 @@ def employee_home(request):
     title = "Dashboard"
     ctx.update(base_ctx(request, title=title))
     ctx['page_heading'] = title
-    return render(request, "userApp/employee_home.html", ctx)
+    return render(request, "userApp/staff/employee_home.html", ctx)
 
 @login_required
 def client_home(request):
@@ -45,4 +45,4 @@ def client_home(request):
     title = "Dashboard"
     ctx.update(base_ctx(request, title=title))
     ctx['page_heading'] = title
-    return render(request, "userApp/client_home.html", ctx)
+    return render(request, "userApp/client/client_home.html", ctx)

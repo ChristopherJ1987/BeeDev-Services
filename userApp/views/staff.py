@@ -11,12 +11,12 @@ def view_all_staff(request):
     if getattr(user, 'role', None) not in allowed_roles:
         raise PermissionDenied("Not allowed")
     
-    staff = User.objects.all()
+    staff = User.objects.filter(is_staff=True)
     title = 'Staff List'
     ctx = {"user_obj": user, "staff": staff}
     ctx.update(base_ctx(request, title=title))
     ctx['page_heading'] = title
-    return render(request, "userApp/view_all_staff.html", ctx)
+    return render(request, "userApp/staff/view_all_staff.html", ctx)
 
 @login_required
 def view_staff_profile(request, pk: int):
@@ -31,4 +31,18 @@ def view_staff_profile(request, pk: int):
     ctx = {"staff": staff, "profile": profile}
     ctx.update(base_ctx(request, title=title))
     ctx["page_heading"] = title
-    return render(request, "userApp/view_staff_profile.html", ctx)
+    return render(request, "userApp/staff/view_staff_profile.html", ctx)
+
+@login_required
+def view_all_contacts(request):
+    user = request.user
+    allowed_roles = {user.Roles.ADMIN, user.Roles.OWNER, user.Roles.HR}
+    if getattr(user, 'role', None) not in allowed_roles:
+        raise PermissionDenied("Not allowed")
+    
+    contacts = User.objects.filter(is_staff=False)
+    title = 'Client / Staff List'
+    ctx = {"user_obj": user, "contacts": contacts}
+    ctx.update(base_ctx(request, title=title))
+    ctx['page_heading'] = title
+    return render(request, "userApp/staff/view_all_contacts.html", ctx)

@@ -26,7 +26,32 @@
       <th>Primary Email:</th>
       <td>{{company.primary_email}}</td>
     </tr>
+    <tr>
+      <th>Phone:</th>
+      <td>
+        {% if company.phone %}
+          {{company.phone}}
+        {% else %}
+          TBD
+        {% endif %}
+      </td>
+    </tr>
   </table>
+  {% if contacts %}
+  <h3>Company Contacts:</h3>
+    <table class="alt_entry">
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+      </tr>
+      {% for c in contacts %}
+        <tr>
+          <td>{{c.name}}</td>
+          <td>{{c.email}}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  {% endif %}
 </div>
 <div class="info">
   <h3>Status</h3>
@@ -40,6 +65,87 @@
       <td>{{company.pipeline_status}}</td>
     </tr>
   </table>
+</div>
+<div class="info">
+  <h3>Links</h3>
+  <table class="entry">
+    {% if drafts %}
+      <tr>
+        <th>Draft Proposals:</th>
+        <td>
+          <ul>
+            {% for d in drafts %}
+            <li><a href="{% url 'proposal_staff:detail' d.id %}">{{d.title}} - ${{d.total}}</a></li>
+            {% endfor %}
+          </ul>
+        </td>
+      </tr>
+    {% endif %}
+    {% if proposals %}
+      <tr>
+        <th>Proposals:</th>
+        <td>
+          <ul>
+            {% for p in proposals %}
+            <li><a href="#">{{p.title}} - ${{p.amount_total}}</a></li>
+            {% endfor %}
+          </ul>
+        </td>
+      </tr>
+    {% endif %}
+    {% if invoices %}
+      <tr>
+        <th>Invoices:</th>
+        <td>
+          <ul>
+            {% for i in invoices %}
+            <li><a href="#">#{{i.number}}</a> - {{i.issue_date}} - {{i.total}}</li>
+            {% endfor %}
+          </ul>
+        </td>
+      </tr>
+    {% endif %}
+    {% if tickets %}
+      <tr>
+        <th>Tickets:</th>
+        <td>
+          <ul>
+            {% for t in tickets %}
+              <li><a href="#">{{t.subject}}</a> - {{t.status}}</li>
+            {% endfor %}
+          </ul>
+        </td>
+      </tr>
+    {% endif %}
+    {% if projects %}
+      <tr>
+        <th>Projects:</th>
+        <td>
+          <ul>
+            {% for p in projects %}
+              <li><a href="#">{{p.name}}</a> - {{p.status}}</li>
+            {% endfor %}
+          </ul>
+        </td>
+      </tr>
+    {% endif %}
+  </table>
+  {% if links %}
+    <table class="alt_entry">
+      <tr>
+        <th>Name</th>
+        <th>URL</th>
+        <th>Section</th>
+      </tr>
+      {% for l in links %}
+        <tr>
+          <td>{{l.label}}</td>
+          <td><a href="{{l.url}}" target="_blank">{{l.url}}</a></td>
+          <td>{{l.section}}</td>
+        </tr>
+      {% endfor %}
+  </table>
+  {% endif %}
 </div>
 
 {% endblock content %}

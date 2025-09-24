@@ -40,4 +40,4 @@ def view_employee_profile(request):
     ctx = {"user_obj": user, "profile": profile, "read_only": True}
     ctx.update(base_ctx(request, title=title))
     ctx["page_heading"] = title
-    return render(request, "userApp/view_employee_profile.html", ctx)
+    return render(request, "userApp/staff/view_employee_profile.html", ctx)

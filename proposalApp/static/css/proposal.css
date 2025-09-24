@@ -84,12 +84,15 @@ body main .detail .entry th {
   background-color: var(--background);
   color: var(--black);
   font-size: 1.2em;
+  margin: 1em 0;
 }
-body main .detail .entry th,
 body main .detail .entry td {
   width: 50%;
   text-align: left;
   padding-left: 0.5em;
+}
+body main .detail .alt_entry {
+  margin: 1em 0;
 }
 body main .detail .alt_entry th {
   background-color: var(--green);
