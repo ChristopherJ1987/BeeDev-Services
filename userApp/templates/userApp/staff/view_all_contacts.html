@@ -9,22 +9,50 @@
     <h1 class="title">{{ heading|default:page_heading|default:title_short|default:"Untitled Page"|stylize_title:"altTitle" }}</h1>
     <div class="mini_menu">
         <h2><a href="{% url 'userApp:employee_home' %}">Dashboard</a></h2>
+        <h2><a href="#" class="icon_link"><img src="{% static 'images/hex_plus.png' %}" alt="icon" class="icon"><span>Add New Prospect</span></a></h2>
+        <h2><a href="#" class="icon_link"><img src="{% static 'images/hex_plus.png' %}" alt="icon" class="icon"><span>Add New Client</span></a></h2>
     </div>
-    <table>
-        <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Username</th>
-            <th>Email</th>
-        </tr>
-        {% for s in contacts %}
-        <tr>
-            <td><a href="{% url 'userApp:profile_detail' s.pk %}">{{s.id}}</a></td>
-            <td>{{s.first_name}} {{s.last_name}}</td>
-            <td>{{s.username}}</td>
-            <td>{{s.email}}</td>
-        </tr>
-        {% endfor%}
-    </table>
+    <div class="detail">
+        <h3>Prospective Clients</h3>
+        <table class="entry alt_entry">
+            <tr>
+                <th>Name</th>
+                <th>Company Name</th>
+                <th>Prospect Status</th>
+            </tr>
+            {% for p in prospects %}
+                <tr>
+                    <td><a href="#">{{p.full_name}}</a></td>
+                    <td>{{p.company_name}}</td>
+                    <td>{{p.status}}</td>
+                </tr>
+            {% empty %}
+            <tr>
+                <td>No prospects found</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    <div class="detail">
+        <h3>Current Clients</h3>
+        <table class="entry alt_entry">
+            <tr>
+                <th>Username</th>
+                <th>Name</th>
+                <th>Email</th>
+            </tr>
+            {% for c in contacts %}
+                <tr>
+                    <td><a href="#">{{c.username}}</a></td>
+                    <td>{{c.first_name}} {{c.last_name}}</td>
+                    <td>{{c.email}}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td>No clients found</td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
 
 {% endblock content %}
