@@ -4,7 +4,7 @@ from decimal import Decimal
 from django.db import models
 from django.conf import settings
 from django.utils.text import slugify
-from django.core.validators import FileExtensionValidator
+from django.core.validators import FileExtensionValidator, MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
 
 ALLOWED_DOC_EXTS = ["pdf", "png", "jpg", "jpeg", "webp", "docx", "xlsx", "txt"]
@@ -74,6 +74,14 @@ class Project(models.Model):
     is_active  = models.BooleanField(default=True)
     tags       = models.CharField(max_length=200, blank=True)
 
+    priority = models.PositiveSmallIntegerField(
+        default=3,
+        validators=[MinValueValidator(1), MaxValueValidator(9)],
+        help_text="Project urgency (1=highest, 9=lowest)."
+    )
+    # Whether clients can see the project's numeric priority on client views.
+    show_priority_to_client = models.BooleanField(default=False)
+
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="projects_created")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -118,6 +126,88 @@ class ProjectMember(models.Model):
 
     def __str__(self):
         return f"{self.project.slug} · {self.user} ({self.role})"
+
+class ProjectTask(models.Model):
+    class Status(models.TextChoices):
+        TODO        = "TODO",        "To Do"
+        IN_PROGRESS = "IN_PROGRESS", "In Progress"
+        BLOCKED     = "BLOCKED",     "Blocked"
+        DONE        = "DONE",        "Done"
+        CANCELED    = "CANCELED",    "Canceled"
+
+    project   = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="tasks")
+    title     = models.CharField(max_length=240)
+    description = models.TextField(blank=True)
+
+    # Independent, numeric task priority (1 = highest)
+    priority  = models.PositiveSmallIntegerField(
+        default=3,
+        validators=[MinValueValidator(1), MaxValueValidator(9)],
+        help_text="Task priority (1=highest, 9=lowest)."
+    )
+
+    status    = models.CharField(max_length=16, choices=Status.choices, default=Status.TODO)
+
+    # Dates & weekly planning
+    due_date          = models.DateField(null=True, blank=True)
+    planned_week_start = models.DateField(
+        null=True, blank=True,
+        help_text="Week start (e.g. Monday) this task is planned for."
+    )
+
+    # Assignment (keep simple: assign to users on the project)
+    assignees = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        related_name="assigned_project_tasks",
+        help_text="Team members responsible for this task."
+    )
+
+    # Progress & ordering
+    estimated_hours   = models.DecimalField(max_digits=6, decimal_places=2, default=Decimal("0.00"))
+    percent_complete  = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))
+    sort_order        = models.PositiveIntegerField(default=0)
+
+    # Client visibility controls
+    is_client_visible        = models.BooleanField(
+        default=True,
+        help_text="If false, clients cannot see this task at all."
+    )
+    show_priority_to_client  = models.BooleanField(
+        default=False,
+        help_text="If true AND task is visible, clients can see the task's priority number."
+    )
+
+    # Audit
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name="project_tasks_created"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = (
+            "project",
+            "planned_week_start",
+            "priority",     # lower numbers first
+            "sort_order",
+            "due_date",
+            "pk",
+        )
+        indexes = [
+            models.Index(fields=["project", "status"]),
+            models.Index(fields=["project", "planned_week_start"]),
+            models.Index(fields=["project", "priority"]),
+            models.Index(fields=["project", "is_client_visible"]),
+        ]
+
+    def __str__(self):
+        return f"{self.project.slug} · {self.title}"
+
+    @property
+    def is_done(self) -> bool:
+        return self.status == self.Status.DONE
 
 class ProjectMilestone(models.Model):
     class State(models.TextChoices):
@@ -247,3 +337,29 @@ class ProjectViewer(models.Model):
 
     def __str__(self):
         return f"{self.project.slug} → {self.user}"
+
+class ProjectWeekNote(models.Model):
+    project   = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="week_notes")
+    week_start = models.DateField(help_text="Normalized to week start (e.g., Monday).")
+    body      = models.TextField(blank=True)
+
+    # Visibility mirrors ProjectUpdate style
+    class Visibility(models.TextChoices):
+        INTERNAL = "INTERNAL", "Internal (staff only)"
+        SHARED   = "SHARED",   "Shared with client"
+
+    visibility = models.CharField(max_length=10, choices=Visibility.choices, default=Visibility.SHARED)
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name="project_week_notes_created"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = (("project", "week_start"),)
+        ordering = ("-week_start", "pk")
+        indexes = [models.Index(fields=["project", "-week_start"])]
+
+    def __str__(self):
+        return f"{self.project.slug} · Week of {self.week_start}"
