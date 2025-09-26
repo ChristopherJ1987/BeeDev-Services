@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 from django.core.validators import URLValidator
 from django.utils import timezone
 import secrets
@@ -41,6 +42,9 @@ class Prospect(TimeStamped):
 
     last_contacted_at = models.DateTimeField(null=True, blank=True)
     next_follow_up_at = models.DateTimeField(null=True, blank=True)
+
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="prospects_created")
+    updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="prospects_updated")
 
     do_not_contact = models.BooleanField(default=False)
     unsubscribe_token = models.CharField(max_length=32, unique=True, editable=False, blank=True)

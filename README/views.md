@@ -34,9 +34,8 @@
 | /tickets | Ticket Admin | ticketApp | -- |
 | /tickets/current/# | One Current Ticket | ticketApp | -- |
 | /tickets/archived/# | One Archived Ticket | ticketApp | -- |
-| /prospects | Prospect Admin | prospectApp | -- |
 | /prospects/# | One Prospect | prospectApp | -- |
-| /prospects/new | Create Prospect | prospectApp | -- |
+| /prospects/new | Create Prospect | prospectApp | Created |
 |||||
 
 
