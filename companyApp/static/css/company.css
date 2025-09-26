@@ -1,9 +1,10 @@
 :root {
-  --yellow: #F3DB18;
+  --yellow: #F2DB1A;
   --black: #000000;
   --background: #F7F6F0;
   --white: #F5F5F5;
   --green: #426e54;
+  --yb_border: linear-gradient(5deg, #000000 25%, #f2db1a 75%);
 }
 * {
   padding: 0;
@@ -23,6 +24,11 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
+}
+.yb-border {
+  border: 4px groove transparent;
+  border-image: var(--yb_border);
+  border-image-slice: 1;
 }
 body main .mini_menu {
   display: flex;
@@ -63,16 +69,46 @@ body main table tr a:hover {
   color: var(--green);
   text-decoration: underline;
 }
-body main .details {
+body main .detail {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   align-items: flex-start;
+  margin: 0 0 1em 0;
+  width: 50%;
 }
-body main .details p {
-  font-size: 1.1em;
-  margin: 1em;
+body main .detail h3 {
+  text-align: center;
+  background-color: var(--green);
+  color: var(--white);
+  width: 100%;
+  padding: 1em;
+  margin-bottom: 0.5em;
+  border: 4px groove transparent;
+  border-image: var(--yb_border);
+  border-image-slice: 1;
+}
+body main .detail .entry {
+  width: 100%;
+}
+body main .detail .entry th {
+  background-color: var(--background);
+  color: var(--black);
+  font-size: 1.2em;
+  margin: 1em 0;
+}
+body main .detail .entry td {
+  width: 50%;
+  text-align: left;
+  padding-left: 0.5em;
+}
+body main .detail .alt_entry {
+  margin: 1em 0;
+}
+body main .detail .alt_entry th {
+  background-color: var(--green);
+  color: var(--white);
 }
 body main .info {
   display: flex;

@@ -14,7 +14,7 @@
                 <details>
                     <summary class="has_caret">Accounts</summary>
                     <div class="menu">
-                        <a href="#">Companies</a>
+                        <a href="{% url 'company_staff:company_home' %}">Companies</a>
                         <a href="{% url 'proposal_staff:proposal_home' %}">Proposals</a>
                         <a href="#">Client Users</a>
                         {% if request.user.role == "ADMIN" or request.user.role == "OWNER" %}

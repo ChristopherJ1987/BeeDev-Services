@@ -3,7 +3,7 @@ from django.core.exceptions import PermissionDenied
 from django.db.models import Prefetch
 from django.views.generic import TemplateView
 from django.shortcuts import render, get_object_or_404
-from ..models import ProposalDraft, DraftItem, Proposal
+from ..models import ProposalDraft, DraftItem, Proposal, ProposalLineItem
 from core.utils.context import base_ctx
 
 @login_required
@@ -19,20 +19,6 @@ def proposal_home(request):
     ctx.update(base_ctx(request, title=title))
     ctx["page_heading"] = title
     return render(request, "proposal_staff/proposal_home.html", ctx)
-
-@login_required
-def view_all_drafts(request):
-    user = request.user
-    allowed_roles = {user.Roles.EMPLOYEE, user.Roles.ADMIN, user.Roles.OWNER, user.Roles.HR}
-    if getattr(user, "role", None) not in allowed_roles:
-        raise PermissionDenied("Not allowed")
-    
-    drafts = ProposalDraft.objects.all()
-    title = "Proposals & Drafts"
-    ctx = {"user_obj": user, "read_only": True, "drafts": drafts}
-    ctx.update(base_ctx(request, title=title))
-    ctx["page_heading"] = title
-    return render(request, "proposal_staff/view_all_drafts.html", ctx)
 
 @login_required
 def view_draft_detail(request, pk: int):
@@ -60,3 +46,30 @@ def view_draft_detail(request, pk: int):
     ctx.update(base_ctx(request, title=title))
     ctx["page_heading"] = title
     return render(request, "proposal_staff/view_draft_detail.html", ctx)
+
+@login_required
+def view_proposal_detail(request, pk: int):
+    user = request.user
+    allowed_roles = {user.Roles.EMPLOYEE, user.Roles.ADMIN, user.Roles.OWNER, user.Roles.HR}
+    if getattr(user, "role", None) not in allowed_roles:
+        raise PermissionDenied("Not allowed")
+    
+    proposal = (
+        Proposal.objects
+        .select_related("company")
+        .prefetch_related(
+            Prefetch(
+                "items",
+                queryset=ProposalLineItem.objects
+                    .select_related("job_rate", "base_setting")
+                    .order_by("sort_order", "pk"),
+            )
+        )
+        .get(pk=pk)
+    )
+    theList = list(proposal.items.all())
+    title = f"{proposal.title} Proposal"
+    ctx = {"user_obj": user, "read_only": True, "draft": proposal, "items": theList}
+    ctx.update(base_ctx(request, title=title))
+    ctx["page_heading"] = title
+    return render(request, "proposal_staff/view_proposal_detail.html", ctx)

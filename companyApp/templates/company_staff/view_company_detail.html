@@ -9,7 +9,7 @@
 <h1 class="title">{{ heading|default:page_heading|default:title_short|default:"Untitled Page"|stylize_title:"altTitle" }}</h1>
 <div class="mini_menu">
     <h2><a href="{% url 'userApp:employee_home' %}">Dashboard</a></h2>
-    <h2><a href="{% url 'company_staff:view_all_companies' %}">Company List</a></h2>
+    <h2><a href="{% url 'company_staff:company_home' %}">Company Admin</a></h2>
 </div>
 <div class="info">
   <h3>Company Information:</h3>
@@ -75,7 +75,7 @@
         <td>
           <ul>
             {% for d in drafts %}
-            <li><a href="{% url 'proposal_staff:detail' d.id %}">{{d.title}} - ${{d.total}}</a></li>
+            <li><a href="{% url 'proposal_staff:draft_detail' d.id %}">{{d.title}} - ${{d.total}}</a></li>
             {% endfor %}
           </ul>
         </td>
