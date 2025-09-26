@@ -7,12 +7,4 @@
         <link rel="stylesheet" href="{% static 'css/user.css'%}?v={% now 'U' %}">
     </head>
     <h1 class="title">{{ heading|default:page_heading|default:title_short|default:"Untitled Page"|stylize_title:"altTitle" }}</h1>
-    <div class="list_menu">
-        <a href="/company/">Client / Company List</a>
-        <a href="/client/list">Client / Contact List</a>
-        <a href="/proposals/">Proposal List</a>
-        <a href="/staff/list">Staff List</a>
-        <a href="#">Tickets</a>
-        <a href="#">Projects</a>
-    </div>
 {% endblock content %}

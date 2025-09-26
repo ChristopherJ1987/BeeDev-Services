@@ -146,6 +146,7 @@ class ProposalDraft(models.Model):
         SUBMITTED = "SUBMITTED", "Submitted"
         APPROVED  = "APPROVED",  "Approved"
         REJECTED  = "REJECTED",  "Rejected"
+        CONVERTED = "CONVERTED", "Converted"
 
     company = models.ForeignKey("companyApp.Company", on_delete=models.CASCADE, related_name="pricing_drafts")
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)

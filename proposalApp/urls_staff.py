@@ -9,7 +9,8 @@ from django.conf.urls.static import static
 app_name = "proposal_staff"
 
 urlpatterns = [
-    path('', views.view_all_drafts, name='view_all_drafts'),
+    path('', views.proposal_home, name='proposal_home'),
+    path('/all', views.view_all_drafts, name='view_all_drafts'),
     path('<int:pk>/', views.view_draft_detail, name='detail'),
 ]
 if settings.DEBUG:
