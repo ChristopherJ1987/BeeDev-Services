@@ -9,8 +9,8 @@
 <h1 class="title">{{ heading|default:page_heading|default:title_short|default:"Untitled Page"|stylize_title:"altTitle" }}</h1>
 <div class="mini_menu">
     <h2><a href="{% url 'userApp:employee_home' %}">Dashboard</a></h2>
+    <h2><a href="#" class="icon_link"><img src="{% static 'images/hex_plus.png' %}" alt="icon" class="icon"><span>Add New Draft Proposal</span></a></h2>
 </div>
-<a href="#">Add New Draft Proposal</a>
 <div class="detail">
     <h3>Drafts</h3>
     <table class="entry alt_entry">
@@ -20,7 +20,7 @@
         </tr>
         {% for d in drafts %}
             <tr>
-                <td><a href="{% url 'proposal_staff:detail' d.pk %}">{{d.title}}</a></td>
+                <td><a href="{% url 'proposal_staff:draft_detail' d.pk %}">{{d.title}}</a></td>
                 <td>{{d.approval_status}}</td>
             </tr>
         {% empty %}
@@ -39,7 +39,7 @@
         </tr>
         {% for p in proposals %}
             <tr>
-                <td><a href="{% url 'proposal_staff:detail' d.pk %}">{{p.title}}</a></td>
+                <td><a href="{% url 'proposal_staff:proposal_detail' d.pk %}">{{p.title}}</a></td>
                 <td></td>
             </tr>
         {% empty %}

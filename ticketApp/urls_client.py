@@ -4,14 +4,12 @@ from .views import *
 from django.conf import settings
 from django.conf.urls.static import static
 
-# All urls are at base/proposals/
+# All urls are at base/client/tickets/
 
-app_name = "proposal_staff"
+app_name = "ticket_client"
 
 urlpatterns = [
-    path('', views.proposal_home, name='proposal_home'),
-    path('draft/<int:pk>/', views.view_draft_detail, name='draft_detail'),
-    path('proposal/<int:pk>/', views.view_proposal_detail, name="proposal_detail"),
+    # path('', views.view_all_client_tickets, name='view_all_client_tickets'),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

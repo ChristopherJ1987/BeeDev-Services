@@ -1,9 +1,11 @@
 :root {
-    --yellow: #F3DB18;
+    // --yellow: #F3DB18;
+    --yellow: #F2DB1A;
     --black: #000000;
     --background: #F7F6F0;
     --white: #F5F5F5;
     --green: #426e54;
+    --yb_border: linear-gradient(5deg,#000000 25%, #f2db1a 75%);
 }
 
 * {
@@ -25,4 +27,10 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
+}
+
+.yb-border {
+    border: 4px groove transparent;
+    border-image: var(--yb_border);
+    border-image-slice: 1;
 }

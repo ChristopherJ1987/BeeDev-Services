@@ -4,7 +4,7 @@ from .views import *
 from django.conf import settings
 from django.conf.urls.static import static
 
-# All urls are at base /
+# All urls are at base/client/proposals/
 
 app_name = "proposal_client"
 

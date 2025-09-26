@@ -9,7 +9,7 @@
 <h1 class="title">{{ heading|default:page_heading|default:title_short|default:"Untitled Page"|stylize_title:"altTitle" }}</h1>
 <div class="mini_menu">
     <h2><a href="{% url 'userApp:employee_home' %}">Dashboard</a></h2>
-    <h2><a href="{% url 'proposal_staff:proposal_home' %}">Proposal Admin</a></h2>
+    <h2><a href="{% url 'proposal_staff:proposal_home' %}">Proposal Home</a></h2>
 </div>
 <div class="detail">
     <h3>{{draft.title}}</h3>

@@ -3,15 +3,32 @@ from django.core.exceptions import PermissionDenied
 from django.views.generic import TemplateView
 from django.shortcuts import render, get_object_or_404
 from ..models import Company, CompanyContact, CompanyLink
+from prospectApp.models import Prospect
 from proposalApp.models import ProposalDraft, DraftItem, Proposal, ProposalEvent
 from core.utils.context import base_ctx
 from django.core.paginator import Paginator
 from django.db.models import Prefetch, Count, Sum, Q
 
 @login_required
+def company_home(request):
+    user = request.user
+    allowed_roles = {user.Roles.EMPLOYEE, user.Roles.ADMIN, user.Roles.OWNER}
+    if getattr(user, "role", None) not in allowed_roles:
+        raise PermissionDenied("Not allowed")
+    
+    companies = Company.objects.all()
+    prospects = Prospect.objects.all()
+
+    title = "Company Admin"
+    ctx = {"user_obj": user, "read_only": True, "companies": companies, "prospects": prospects}
+    ctx.update(base_ctx(request, title=title))
+    ctx["page_heading"] = title
+    return render(request, "company_staff/company_home.html", ctx)
+
+@login_required
 def view_all_companies(request):
     user = request.user
-    allowed_roles = {user.Roles.EMPLOYEE, user.Roles.ADMIN, user.Roles.OWNER, user.Roles.HR}
+    allowed_roles = {user.Roles.EMPLOYEE, user.Roles.ADMIN, user.Roles.OWNER}
     if getattr(user, "role", None) not in allowed_roles:
         raise PermissionDenied("Not allowed")
     
@@ -31,7 +48,7 @@ def view_all_companies(request):
     return render(request, "company_staff/view_all.html", ctx)
 
 @login_required
-def view_one(request, pk: int):
+def view_company_detail(request, pk: int):
     user = request.user
     allowed_roles = {user.Roles.EMPLOYEE, user.Roles.ADMIN, user.Roles.OWNER, user.Roles.HR}
     if getattr(user, "role", None) not in allowed_roles:
@@ -52,4 +69,4 @@ def view_one(request, pk: int):
     ctx = {"user_obj": user, "read_only": True, "company": company, "contacts":contacts, "links": links, "drafts": drafts, "proposals": proposals, "proposal_stats": proposal_stats, "recent_events": recent_events}
     ctx.update(base_ctx(request, title=title))
     ctx["page_heading"] = title
-    return render(request, "company_staff/view_detail.html", ctx)
+    return render(request, "company_staff/view_company_detail.html", ctx)
