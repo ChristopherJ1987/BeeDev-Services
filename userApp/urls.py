@@ -16,16 +16,16 @@ urlpatterns = [
     path("logout/", LogoutView.as_view(), name="logout"),
 
     # || Staff/Employee Links ||
-    path("staff/", staff_home, name="staff_home"),
-    # path("staff/list", view_all_staff, name="view_all_staff"),
-    # path("client/list", view_all_contacts, name="view_all_clients"),
-    # path("staff/<int:pk>", view_staff_profile, name="profile_detail"),
+    path("staff/", staff_home, name="staff_home"), # redirects to admin
+    path("team/", view_all_staff, name="view_all_staff"),
+    path("clients/", view_all_clients, name="view_all_clients"),
+    path("staff/<int:pk>/", view_staff_profile, name="profile_detail"),
     path("employee/", employee_home, name="employee_home"),
-    path("employee/profile", view_employee_profile, name="view_employee_profile"),
+    path("employee/profile/", view_employee_profile, name="view_employee_profile"),
 
     # || Client Links ||
     path("client/", client_home, name="client_home"),
-    path("client/profile", view_client_profile, name="view_client_profile"),
+    path("client/profile/", view_client_profile, name="view_client_profile"),
     
 ]
 if settings.DEBUG:

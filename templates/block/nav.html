@@ -16,9 +16,9 @@
                     <div class="menu">
                         <a href="{% url 'company_staff:company_home' %}">Companies</a>
                         <a href="{% url 'proposal_staff:proposal_home' %}">Proposals</a>
-                        <a href="#">Client Users</a>
+                        <a href="{% url 'userApp:view_all_clients' %}">Client Contacts</a>
                         {% if request.user.role == "ADMIN" or request.user.role == "OWNER" %}
-                            <a href="#">Invoices</a>
+                            <a href="{% url 'invoice_staff:invoice_home' %}">Invoices</a>
                         {% endif %}
                         {# Optional later:<a href="#">DNC Requests</a>#}
                     </div>
@@ -27,7 +27,7 @@
                 <a href="#">Tickets</a>
                 {# Team visible to Admin/Owner only #}
                 {% if request.user.role == "ADMIN" or request.user.role == "OWNER" %}
-                    <a href="#">Team</a>
+                    <a href="{% url 'userApp:view_all_staff' %}">Team</a>
                 {% endif %}
 
                 <details class="menu_group align_right">

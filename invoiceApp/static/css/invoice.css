@@ -47,25 +47,6 @@ body main .mini_menu a:hover {
   color: var(--green);
   text-decoration: underline;
 }
-body main table {
-  width: 50%;
-  margin: 1em;
-}
-body main table tr th {
-  text-align: center;
-  background-color: var(--green);
-  color: var(--white);
-  padding: 1em;
-  font-size: 1.2em;
-}
-body main table tr a {
-  color: var(--black);
-  text-decoration: none;
-}
-body main table tr a:hover {
-  color: var(--green);
-  text-decoration: underline;
-}
 body main .detail {
   display: flex;
   flex-direction: column;
