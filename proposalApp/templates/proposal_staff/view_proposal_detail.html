@@ -21,7 +21,7 @@
         <tr>
             <th>Contact</th>
             {% if proposal.contact_name %}
-                <td>{{proposal.contact_name}}</td>
+                <td>{{proposal.contact_name}} {{company.primary_contact_name}}</td>
             {% else %}
                 <td>TBD</td>
             {% endif %}
@@ -67,7 +67,7 @@
             {% endfor %}
             <tr>
                 <td colspan="2">Subtotal</td>
-                <td>${{proposal.subtotal}}</td>
+                <td>${{proposal.amount_subtotal}}</td>
             </tr>
         </table>
     </div>

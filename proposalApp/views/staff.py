@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Prefetch, Max
 from django.views.generic import TemplateView
 from django.shortcuts import render, get_object_or_404, redirect
@@ -87,10 +87,19 @@ def view_draft_detail(request, pk: int):
                 try:
                     draft.assigned_reviewer_id = int(reviewer_id)
                     draft.save(update_fields=["assigned_reviewer_id"])
-                except:
+                except Exception:
                     pass
-            draft.mark_submitted(actor=user, save=True)
+            
+            try:
+                draft.mark_submitted(actor=user, save=True)
+            except ValidationError as e:
+                messages.error(
+                    request, "Cannot submit: the company is missing a primary email."
+                    "Add it to the Company and try again."
+                )
+                return redirect(request.path)
             messages.success(request, "Draft submitted for approval.")
+            return redirect(request.path)
 
         # 2) Approve / Reject (Admin/Owner only)
         if action in {"approve", "reject"}:
@@ -135,7 +144,7 @@ def view_proposal_detail(request, pk: int):
     
     proposal = (
         Proposal.objects
-        .select_related("company")
+        .select_related("company", "created_by", "approver_user")
         .prefetch_related(
             Prefetch(
                 "line_items",
@@ -150,13 +159,19 @@ def view_proposal_detail(request, pk: int):
             Prefetch(
                 "recipients",
                 queryset=ProposalRecipient.objects.order_by("-is_primary", "email")
+            ),
+            Prefetch(
+                "events",
+                queryset=ProposalEvent.objects.select_related("actor").order_by("-at", "pk")
             )
         )
         .get(pk=pk)
     )
     theList = list(proposal.line_items.all())
+    events = list(proposal.events.all())
+
     title = f"{proposal.title} Proposal"
-    ctx = {"user_obj": user, "read_only": True, "proposal": proposal, "items": theList}
+    ctx = {"user_obj": user, "read_only": True, "proposal": proposal, "items": theList, "events": events}
     ctx.update(base_ctx(request, title=title))
     ctx["page_heading"] = title 
     return render(request, "proposal_staff/view_proposal_detail.html", ctx)

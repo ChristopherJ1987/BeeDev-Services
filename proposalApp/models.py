@@ -186,8 +186,35 @@ class ProposalDraft(models.Model):
 
     class Meta:
         ordering = ("-created_at",)
+    
+    # --- Autofill helpers ---
+    def autofill_contact_from_company(self, *, force: bool = False) -> None:
+        """
+        Copy company.primary_contact_name/email into the draft's contact fields.
+        If force=False, only fill blanks. If force=True, overwrite whatever is there.
+        """
+        if not self.company_id:
+            return
+        c = self.company
+        if force or not (self.contact_name or "").strip():
+            self.contact_name = (c.primary_contact_name or "").strip()
+        if force or not (self.contact_email or "").strip():
+            self.contact_email = (c.primary_email or "").strip()
+
+    # --- persistence override ---
+    def save(self, *args, **kwargs):
+        # On initial create, prefill from company if blank
+        if not self.pk:
+            self.autofill_contact_from_company(force=False)
+        super().save(*args, **kwargs)
 
     def mark_submitted(self, actor=None, save=True):
+        name  = (self.company.primary_contact_name or "").strip() if self.company else ""
+        email = (self.company.primary_email or "").strip() if self.company else ""
+        if not name or not email:
+            raise ValidationError(
+                "Company must have a Primary Contact Name and Primary Email before submitting for approval."
+            )
         self.approval_status = self.ApprovalStatus.SUBMITTED
         self.submitted_at = timezone.now()
         if save:
@@ -289,6 +316,9 @@ class ProposalDraft(models.Model):
         Create a Proposal snapshot (final) from this Draft for sending/signing.
         Fully compatible with invoiceApp.Invoice.from_proposal().
         """
+        snap_name  = (self.contact_name or "").strip() or (self.company.primary_contact_name or "")
+        snap_email = (self.contact_email or "").strip() or (self.company.primary_email or "")
+
         prop = Proposal.objects.create(
             company=self.company,
             created_by=actor,
@@ -303,6 +333,8 @@ class ProposalDraft(models.Model):
             deposit_amount=self.deposit_amount,
             remaining_due=self.remaining_due,
             converted_from=self,
+            contact_name=snap_name,
+            contact_email=snap_email,
         )
         if self.approved_by_id and not getattr(prop, "approver_user_id", None):
             prop.approver_user_id = self.approved_by_id
@@ -429,6 +461,9 @@ class Proposal(models.Model):
     """Final proposal artifact with signing, recipients, events, and invoice linkage."""
     company     = models.ForeignKey("companyApp.Company", on_delete=models.CASCADE, related_name="simple_proposals")
     created_by  = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+
+    contact_name = models.CharField(max_length=160, blank=True)
+    contact_email = models.EmailField(blank=True)
 
     allowed_users = models.ManyToManyField(settings.AUTH_USER_MODEL, through="ProposalViewer", related_name="proposals_shared_with", blank=True,)
 

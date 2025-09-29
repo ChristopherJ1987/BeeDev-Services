@@ -343,7 +343,7 @@ class ProposalAdmin(admin.ModelAdmin):
     ]
 
     list_display = (
-        "title", "company", "currency",
+        "title", "company", "contact_email", "currency",
         "amount_subtotal", "discount_total", "amount_tax", "amount_total",
         "deposit_type", "deposit_value", "deposit_amount",
         "remaining_due", "sent_at", "signed_at",
@@ -366,6 +366,7 @@ class ProposalAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ("Header", {"fields": ("company", "created_by", "title", "currency")}),
+        ("Client Contact", {"fields": ("contact_name", "contact_email"),}),
         ("Totals", {"fields": (("amount_subtotal", "discount_total", "amount_tax", "amount_total"),)}),
         ("Deposit", {"fields": (("deposit_type", "deposit_value", "deposit_amount"), "remaining_due")}),
         ("Signing", {"fields": ("sign_token", "token_expires_at", "sign_link_preview", "sent_at", "viewed_at", "signed_at")}),
