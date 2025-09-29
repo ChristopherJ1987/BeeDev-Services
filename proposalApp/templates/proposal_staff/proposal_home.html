@@ -39,8 +39,16 @@
         </tr>
         {% for p in proposals %}
             <tr>
-                <td><a href="{% url 'proposal_staff:proposal_detail' d.pk %}">{{p.title}}</a></td>
-                <td></td>
+                <td><a href="{% url 'proposal_staff:proposal_detail' p.pk %}">{{p.title}}</a></td>
+                <td>
+                    {% with e=p.events.all.0  %}
+                        {% if e %}
+                            {{e.kind}} at {{e.at|date:"Y-m-d"}}
+                        {% else %}
+                            No events yet
+                        {% endif %}
+                    {% endwith %}
+                </td>
             </tr>
         {% empty %}
         <tr>

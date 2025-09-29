@@ -23,7 +23,7 @@
 | /proposals/proposal/# | One Proposal | proposalApp | Created |
 | /companies | Company Admin | companyApp | Created |
 | /companies/company/# | One Company | companyApp | Created |
-| /companies/company/new | Create Company | companyApp | -- |
+| /companies/company/new | Create Company | companyApp | Created |
 | /invoices | Invoice Admin | invoiceApp | Created |
 | /invoices/# | One Invoice | invoiceApp | --|
 | /invoices/new | Create Invoice | invoiceApp | --|
@@ -34,7 +34,7 @@
 | /tickets | Ticket Admin | ticketApp | -- |
 | /tickets/current/# | One Current Ticket | ticketApp | -- |
 | /tickets/archived/# | One Archived Ticket | ticketApp | -- |
-| /prospects/# | One Prospect | prospectApp | -- |
+| /prospects/# | One Prospect | prospectApp | Created |
 | /prospects/new | Create Prospect | prospectApp | Created |
 |||||
 
