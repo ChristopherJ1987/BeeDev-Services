@@ -16,7 +16,7 @@
     <table class="entry">
         <tr>
             <th>Company Name</th>
-            <td><a href="{% url 'company_staff:detail' draft.company_id %}">{{draft.company}}</a></td>
+            <td><a href="{% url 'company_staff:company_detail' draft.company_id %}">{{draft.company}}</a></td>
         </tr>
         <tr>
             <th>Contact</th>
@@ -76,5 +76,76 @@
         </table>
     </div>
 {% endif %}
+<div class="detail">
+    <h3>Status & Actions</h3>
+    <table class="entry">
+        <tr>
+            <th>Status</th>
+            <td>{{draft.approval_status}}</td>
+        </tr>
+        {% if draft.submitted_at %}
+            <tr>
+                <th>Submitted</th>
+                <td>{{draft.submitted_at|date:"Y-m-d"}}</td>
+            </tr>
+        {% endif %}
+        {% if draft.approved_at %}
+            <tr>
+                <th>Approved</th>
+                <td>{{draft.approved_at|date:"Y-m-d"}} by {{draft.approved_by.get_full_name|default:draft.approved_by}}</td>
+            </tr>
+        {% endif %}
+        {% if draft.assigned_reviewer %}
+            <tr>
+                <th>Assigned Reviewer</th>
+                <td>{{draft.assigned_reviewer.get_full_name|default:draft.assigned_reviewer}}</td>
+            </tr>
+        {% endif %}
+        {# ---- When DRAFT or REJECTED: submit for approval & pick admin ---- #}
+        {% if draft.approval_status == "DRAFT" or draft.approval_status == "REJECTED" %}
+            <tr>
+                <form method="post" class="inline_form" style="margin-top:.5rem;">
+                    {% csrf_token %}
+                    <th>
+                        <label>Assign to Admin/Owner (optional):</label>
+                    </th>
+                    <td>
+                        <select name="reviewer_id">
+                            <option value="">— Any Admin —</option>
+                            {% for u in admin_users %}
+                            <option value="{{ u.id }}">{{ u.get_full_name|default:u.username }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" name="action" value="submit">Send for approval</button>
+                    </td>
+                </form>
+            </tr>
+        {% endif %}
+        {# ---- When SUBMITTED: Admin/Owner can Approve/Reject ---- #}
+        {% if draft.approval_status == "SUBMITTED" %}
+            <tr>
+                {% if request.user.role == "ADMIN" or request.user.role == "OWNER" or request.user.is_superuser %}
+                <form method="post" class="inline_form" style="margin-top:.5rem;">
+                    {% csrf_token %}
+                    <td><textarea name="approval_notes" rows="2" placeholder="Optional notes"></textarea></td>
+                    <td><button type="submit" name="action" value="approve">Approve</button>
+                    <button type="submit" name="action" value="reject">Reject</button></td>
+                </form>
+                {% else %}
+                <th colspan="2"><p style="margin-top:.5rem;">Waiting for admin approval…</p></th>
+            </tr>
+            {% endif %}
+        {% endif %}
+        {# ---- When APPROVED: Convert to Proposal ---- #}
+        {% if draft.approval_status == "APPROVED" %}
+            <tr>
+                <form method="post" style="margin-top:.5rem;">
+                {% csrf_token %}
+                <td colspan="2"><button type="submit" name="action" value="convert">Convert to Proposal</button></td>
+                </form>
+            </tr>
+        {% endif %}
+    </table>
+</div>
 
 {% endblock content %}

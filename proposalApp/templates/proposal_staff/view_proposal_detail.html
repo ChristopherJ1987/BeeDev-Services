@@ -12,24 +12,24 @@
     <h2><a href="{% url 'proposal_staff:proposal_home' %}">Proposal Home</a></h2>
 </div>
 <div class="detail">
-    <h3>{{draft.title}}</h3>
+    <h3>{{proposal.title}}</h3>
     <table class="entry">
         <tr>
             <th>Company Name</th>
-            <td><a href="{% url 'company_staff:detail' draft.company_id %}">{{draft.company}}</a></td>
+            <td><a href="{% url 'company_staff:company_detail' proposal.company_id %}">{{proposal.company}}</a></td>
         </tr>
         <tr>
             <th>Contact</th>
-            {% if draft.contact_name %}
-                <td>{{draft.contact_name}}</td>
+            {% if proposal.contact_name %}
+                <td>{{proposal.contact_name}}</td>
             {% else %}
                 <td>TBD</td>
             {% endif %}
         </tr>
         <tr>
             <th>Email</th>
-            {% if draft.contact_email %}
-                <td>{{draft.contact_email}}</td>
+            {% if proposal.contact_email %}
+                <td>{{proposal.contact_email}}</td>
             {% else %}
                 <td>TBD</td>
             {% endif %}
@@ -37,25 +37,21 @@
     </table>
 </div>
 <div class="detail">
-    <h3>Estimates</h3>
+    <h3>Totals</h3>
     <table class="entry">
         <tr>
-            <th>Estimate Tier</th>
-            <td>#{{draft.estimate_tier_id}} (${{draft.estimate_low}} - ${{draft.estimate_high}})</td>
-        </tr>
-        <tr>
             <th>Discount</th>
-            <td>{{draft.discount}}</td>
+            <td>{{proposal.discount_amount}}</td>
         </tr>
         <tr>
             <th>Total</th>
-            <td>${{draft.total}}</td>
+            <td>${{proposal.amount_total}}</td>
         </tr>
     </table>
 </div>
 {% if items %}
     <div class="detail">
-        <h3>Draft Items</h3>
+        <h3>proposal Items</h3>
         <table class="entry alt_entry">
             <tr>
                 <th>Name</th>
@@ -71,7 +67,7 @@
             {% endfor %}
             <tr>
                 <td colspan="2">Subtotal</td>
-                <td>${{draft.subtotal}}</td>
+                <td>${{proposal.subtotal}}</td>
             </tr>
         </table>
     </div>

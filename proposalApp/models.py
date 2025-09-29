@@ -182,6 +182,7 @@ class ProposalDraft(models.Model):
     approved_at = models.DateTimeField(null=True, blank=True)
     approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="proposal_drafts_approved")
     approval_notes = models.TextField(blank=True)
+    assigned_reviewer = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="proposal_drafts_assigned", help_text="Admin/Owner assigned to review this draft.")
 
     class Meta:
         ordering = ("-created_at",)
@@ -332,7 +333,8 @@ class ProposalDraft(models.Model):
                 amount_applied=self.discount_amount,
                 sort_order=0,
             )
-
+        self.approval_status = self.ApprovalStatus.CONVERTED
+        self.save(update_fields=["approval_status", "updated_at"])
         ProposalEvent.objects.create(proposal=prop, kind=ProposalEvent.Kind.CREATED, actor=actor)
         return prop
 
