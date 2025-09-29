@@ -21,7 +21,7 @@
             </tr>
             {% for p in prospects %}
                 <tr>
-                    <td><a href="#">{{p.full_name}}</a></td>
+                    <td><a href="{% url 'prospects:view_one_prospect' p.pk %}">{{p.full_name}}</a></td>
                     <td>{{p.company_name}}</td>
                     <td>{{p.status}}</td>
                 </tr>

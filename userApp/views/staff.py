@@ -29,7 +29,7 @@ def view_staff_profile(request, pk: int):
     staff = get_object_or_404(User, pk=pk)
     profile = get_object_or_404(EmployeeProfile, user=staff)
     title = f"{staff.preferred_name}'s Profile"
-    ctx = {"staff": staff, "profile": profile}
+    ctx = {"user_obj": user, "staff": staff, "profile": profile}
     ctx.update(base_ctx(request, title=title))
     ctx["page_heading"] = title
     return render(request, "userApp/staff/view_staff_profile.html", ctx)

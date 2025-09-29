@@ -3,30 +3,29 @@
 {% load page_title %}
 
 {% block content %}
-  <head>
-    <link rel="stylesheet" href="{% static 'css/prospect.css'%}?v={% now 'U' %}">
-  </head>
-  <h1 class="title">{{ heading|default:page_heading|default:title_short|default:"Untitled Page"|stylize_title:"altTitle" }}</h1>
-  <section class="card">
+    <head>
+      <link rel="stylesheet" href="{% static 'css/prospect.css'%}?v={% now 'U' %}">
+    </head>
+    <h1 class="title">{{ heading|default:page_heading|default:title_short|default:"Untitled Page"|stylize_title:"altTitle" }}</h1>
+  
     <form method="post" novalidate>
       {% csrf_token %}
-      <div class="form-grid">
+      <table>
         {{ form.non_field_errors }}
         {% for field in form %}
-          <div class="form-row{% if field.errors %} has-errors{% endif %}">
-            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-            {{ field }}
+          <tr class="{% if field.errors %} has-errors{% endif %}">
+            <th><label for="{{ field.id_for_label }}">{{ field.label }}</label></th>
+            <td>{{ field }}</td>
             {% if field.help_text %}<small class="help">{{ field.help_text }}</small>{% endif %}
             {% for err in field.errors %}<p class="error">{{ err }}</p>{% endfor %}
-          </div>
+          </tr>
         {% endfor %}
-      </div>
+        </table>
 
-      <div class="actions">
-        <a class="btn btn-secondary" href="{% url 'userApp:view_all_clients' %}">Cancel</a>
-        <button class="btn btn-primary" type="submit">Save Prospect</button>
+      <div class="buttons">
+        <a class="buttonLike" href="{% url 'userApp:view_all_clients' %}">Cancel</a>
+        <button type="submit">Save Prospect</button>
       </div>
     </form>
-  </section>
 
 {% endblock content %}

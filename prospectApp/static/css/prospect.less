@@ -1,0 +1,35 @@
+@import './root/root.less';
+
+body {
+    main {
+        form {
+            .flexcolumn();
+            width: 50%;
+
+            table {
+                th {
+                    text-align: left;
+                }
+                td {
+                    input, select, textarea {
+                        margin: .2em .8em;
+                    }
+                }
+            }
+            .buttons {
+                .flexrow();
+                justify-content: space-evenly;
+                width: 100%;
+
+                .buttonLike, button {
+                    padding: 10px 14px;
+                    .yb-border();
+                    background-color: var(--green);
+                    color: var(--yellow);
+                    font-size: 1.1rem;
+                    text-decoration: none;
+                }
+            }
+        }
+    }
+}

@@ -9,8 +9,8 @@ from django.conf.urls.static import static
 app_name = "prospects"
 
 urlpatterns = [
-    # path('', views.prospect_home, name='prospect_home'),
     path('new', views.add_prospect, name="add_prospect"),
+    path('<int:pk>', views.view_prospect, name="view_one_prospect"),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
