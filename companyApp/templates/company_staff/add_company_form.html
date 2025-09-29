@@ -4,7 +4,7 @@
 
 {% block content %}
     <head>
-      <link rel="stylesheet" href="{% static 'css/prospect.css'%}?v={% now 'U' %}">
+      <link rel="stylesheet" href="{% static 'css/company.css'%}?v={% now 'U' %}">
     </head>
     <h1 class="title">{{ heading|default:page_heading|default:title_short|default:"Untitled Page"|stylize_title:"altTitle" }}</h1>
   
@@ -23,8 +23,8 @@
         </table>
 
       <div class="buttons">
-        <a class="buttonLike" href="{% url 'userApp:view_all_clients' %}">Cancel</a>
-        <button type="submit">Save Prospect</button>
+        <a class="buttonLike" href="{% url 'company_staff:company_home' %}">Cancel</a>
+        <button type="submit">Save Company</button>
       </div>
     </form>
 

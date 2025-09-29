@@ -1,13 +1,15 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.views.generic import TemplateView
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from ..models import Company, CompanyContact, CompanyLink
+from ..forms import CompanyForm
 from prospectApp.models import Prospect
 from proposalApp.models import ProposalDraft, DraftItem, Proposal, ProposalEvent
 from core.utils.context import base_ctx
 from django.core.paginator import Paginator
 from django.db.models import Prefetch, Count, Sum, Q
+from django.contrib import messages
 
 @login_required
 def company_home(request):
@@ -70,3 +72,30 @@ def view_company_detail(request, pk: int):
     ctx.update(base_ctx(request, title=title))
     ctx["page_heading"] = title
     return render(request, "company_staff/view_company_detail.html", ctx)
+
+@login_required
+def add_company(request):
+    user = request.user
+    allowed_roles = {user.Roles.EMPLOYEE, user.Roles.ADMIN, user.Roles.OWNER}
+    if getattr(user, "role", None) not in allowed_roles:
+        raise PermissionDenied("Not allowed")
+    
+    if request.method == "POST":
+        form = CompanyForm(request.POST)
+        if form.is_valid():
+            company = form.save(commit=False)
+            if hasattr(company, "created_by"):
+                company.created_by = user
+            company.save()
+            messages.success(request, "Company added successfully.")
+
+            return redirect("company_staff:company_home")
+        else:
+            messages.error(request, "Please fix the errors below.")
+    else:
+        form = CompanyForm()
+    title = "Add Company"
+    ctx = {"form": form}
+    ctx.update(base_ctx(request, title=title))
+    ctx["page_heading"] = title
+    return render(request, "company_staff/add_company_form.html", ctx)
