@@ -11,6 +11,7 @@ app_name = "company_staff"
 urlpatterns = [
     path('', views.company_home, name="company_home"),
     path('company/<int:pk>/', views.view_company_detail, name='company_detail'),
+    path('add/', views.add_company, name="add_company"),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

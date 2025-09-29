@@ -37,12 +37,12 @@ body main form {
   align-items: center;
   width: 50%;
 }
-body main form table th {
+body main form .add_form th {
   text-align: left;
 }
-body main form table td input,
-body main form table td select,
-body main form table td textarea {
+body main form .add_form td input,
+body main form .add_form td select,
+body main form .add_form td textarea {
   margin: 0.2em 0.8em;
 }
 body main form .buttons {
