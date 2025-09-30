@@ -10,6 +10,15 @@
 <div class="mini_menu">
     <h2><a href="{% url 'userApp:employee_home' %}">Dashboard</a></h2>
     <h2><a href="{% url 'proposal_staff:proposal_home' %}">Proposal Home</a></h2>
+    <h2><form method="post" action="{% url 'proposal_staff:proposal_generate_pdf' proposal.id %}" style="display:inline;">
+    {% csrf_token %}
+    <button type="submit">Create / Recreate PDF</button>
+  </form></h2>
+  <h2>{% if proposal.pdf %}
+    <a href="{% url 'proposal_staff:proposal_pdf' proposal.id %}" target="_blank" rel="noopener">View PDF</a>
+  {% else %}
+    <span style="opacity:.7;">No PDF yet</span>
+  {% endif %}</h2>
 </div>
 <div class="detail">
     <h3>{{proposal.title}}</h3>

@@ -78,6 +78,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.static',
                 'core.context_processors.beedev_defaults',
+                'core.context_processors.branding',
             ],
         },
     },
@@ -135,6 +136,17 @@ PROSPECTS_CLIENT_MODEL = "companyApp.Company"
 PROPOSAL_ACCOUNT_CREATOR = "proposalApp.hooks:create_account_for_signed_proposal"
 PROPOSAL_INVOICE_CREATOR = "proposalApp.hooks:create_invoice_for_deposit"
 PROPOSAL_MESSENGER       = "proposalApp.hooks:send_proposal_email"
+
+# Branding for PDFs (and other templates)
+BRAND_NAME = "BeeDev Services"
+BRAND_LOGO_STATIC = "images/altLogo.png"
+BRAND_TAGLINE = "Your Vision, Hive Crafted"
+BRAND_FAVICON = "images/favicon.png"
+BRAND_WEBSITE = "https://beedev-serices.com"
+BRAND_EMAIL = "developers@beedev-services.com"
+BRAND_PHONE = "(845)271-7840"
+BRAND_ADDRESS = "Wappingers Falls, NY 12590"
+
 
 
 # Internationalization

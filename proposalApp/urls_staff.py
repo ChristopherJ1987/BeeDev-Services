@@ -12,6 +12,8 @@ urlpatterns = [
     path('', views.proposal_home, name='proposal_home'),
     path('draft/<int:pk>/', views.view_draft_detail, name='draft_detail'),
     path('proposal/<int:pk>/', views.view_proposal_detail, name="proposal_detail"),
+    path("proposal/<int:pk>/pdf/generate/", views.generate_proposal_pdf_view, name="proposal_generate_pdf"),
+    path("proposal/<int:pk>/pdf/", views.view_proposal_pdf, name="proposal_pdf"),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
