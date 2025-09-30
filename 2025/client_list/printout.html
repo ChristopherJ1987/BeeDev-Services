@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BeeDev Services - Business Lead Generation Process</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #fff8e1 0%, #fff3c4 100%);
+            color: #2c1810;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 8.5in;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #ffc107 0%, #ff8f00 100%);
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(255,255,255,0.1) 10px,
+                rgba(255,255,255,0.1) 20px
+            );
+            animation: float 20s infinite linear;
+        }
+        
+        @keyframes float {
+            0% { transform: translateX(-50px); }
+            100% { transform: translateX(50px); }
+        }
+        
+        .company-name {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #2c1810;
+            margin-bottom: 5px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .bee-icon {
+            display: inline-block;
+            font-size: 1.8rem;
+            margin: 0 10px;
+            animation: buzz 2s infinite ease-in-out;
+        }
+        
+        @keyframes buzz {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            25% { transform: translateY(-3px) rotate(2deg); }
+            75% { transform: translateY(3px) rotate(-2deg); }
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            color: #5d4e37;
+            position: relative;
+            z-index: 2;
+            font-weight: 500;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .process-title {
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2c1810;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .process-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: linear-gradient(135deg, #ffc107, #ff8f00);
+            border-radius: 2px;
+        }
+        
+        .step {
+            background: #fefcf3;
+            border: 2px solid #ffe082;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            position: relative;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .step:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+        }
+        
+        .step-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .step-number {
+            background: linear-gradient(135deg, #ffc107, #ff8f00);
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-right: 15px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+        
+        .step-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #2c1810;
+            flex: 1;
+        }
+        
+        .step-icon {
+            font-size: 1.5rem;
+            color: #ff8f00;
+        }
+        
+        .step-description {
+            color: #5d4e37;
+            margin-bottom: 15px;
+            font-size: 1rem;
+        }
+        
+        .command-box {
+            background: #2c1810;
+            color: #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            margin: 10px 0;
+            position: relative;
+            overflow-x: auto;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .command-box::before {
+            content: '$ ';
+            color: #ff8f00;
+            font-weight: bold;
+        }
+        
+        .file-name {
+            background: #ffe082;
+            color: #2c1810;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .highlight {
+            background: #fff3c4;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: 500;
+        }
+        
+        .footer {
+            background: #f8f4e6;
+            padding: 20px;
+            text-align: center;
+            border-top: 2px solid #ffe082;
+        }
+        
+        .footer-text {
+            color: #5d4e37;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .hexagon-pattern {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            opacity: 0.1;
+            font-size: 100px;
+            color: #ffc107;
+            transform: rotate(30deg);
+        }
+        
+        @media print {
+            body { 
+                padding: 0; 
+                background: white;
+            }
+            .container { 
+                box-shadow: none; 
+                max-width: 100%;
+                margin: 0;
+            }
+            .step:hover {
+                transform: none;
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hexagon-pattern">⬢</div>
+        
+        <header class="header">
+            <h1 class="company-name">
+                <span class="bee-icon">🐝</span>
+                BeeDev Services
+                <span class="bee-icon">🐝</span>
+            </h1>
+            <p class="subtitle">Website Design & Development Solutions</p>
+        </header>
+        
+        <div class="content">
+            <h2 class="process-title">Business Lead Generation Process</h2>
+            
+            <div class="step">
+                <div class="step-header">
+                    <div class="step-number">0</div>
+                    <h3 class="step-title">Environment Setup</h3>
+                    <span class="step-icon">⚙️</span>
+                </div>
+                <p class="step-description">
+                    Navigate to the <span class="file-name">client_list</span> folder and prepare your Python environment for data collection.
+                </p>
+                <div class="command-box">cd client_list</div>
+                <div class="command-box">source venv/bin/activate</div>
+                <div class="command-box">pip install -r requirements.txt</div>
+            </div>
+            
+            <div class="step">
+                <div class="step-header">
+                    <div class="step-number">1</div>
+                    <h3 class="step-title">Fetch Business Data from Yelp</h3>
+                    <span class="step-icon">🔍</span>
+                </div>
+                <p class="step-description">
+                    Use <span class="file-name">fetch_yelp.py</span> to search Yelp for businesses matching your target criteria. This creates a CSV file with <span class="highlight">business names, addresses, and Yelp URLs</span>.
+                </p>
+                <div class="command-box">python fetch_yelp.py --term "coffee shops" --location "Oklahoma City, OK" --max 100</div>
+                <p style="margin-top: 10px; color: #666; font-size: 0.9rem;">
+                    📄 <strong>Output:</strong> yelp_coffee_Oklahoma_City_OK.csv
+                </p>
+            </div>
+            
+            <div class="step">
+                <div class="step-header">
+                    <div class="step-number">2</div>
+                    <h3 class="step-title">Discover Business Websites</h3>
+                    <span class="step-icon">🌐</span>
+                </div>
+                <p class="step-description">
+                    Run <span class="file-name">check_websites.py</span> to automatically find business websites. The script searches Yelp pages first, then attempts to <span class="highlight">guess and verify website URLs</span> for businesses without listed websites.
+                </p>
+                <div class="command-box">python check_websites.py --input yelp_coffee_Oklahoma_City_OK.csv --output leads_coffee_ok.csv</div>
+                <p style="margin-top: 10px; color: #666; font-size: 0.9rem;">
+                    📄 <strong>Final Output:</strong> leads_coffee_ok.csv (ready for mailer/cold call campaigns)
+                </p>
+            </div>
+        </div>
+        
+        <footer class="footer">
+            <p class="footer-text">
+                🐝 Buzzing with efficient lead generation • Creating sweet business opportunities
+            </p>
+        </footer>
+    </div>
+</body>
+</html>
