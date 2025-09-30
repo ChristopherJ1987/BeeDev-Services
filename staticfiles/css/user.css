@@ -1,0 +1,159 @@
+:root {
+  --yellow: #F2DB1A;
+  --black: #000000;
+  --background: #F7F6F0;
+  --white: #F5F5F5;
+  --green: #426e54;
+  --yb_border: linear-gradient(5deg, #000000 25%, #f2db1a 75%);
+}
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  font-family: 'Source Sans Pro', sans-serif;
+  font-display: swap;
+}
+.flexrow {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+.flexcolumn {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.yb-border {
+  border: 4px groove transparent;
+  border-image: var(--yb_border);
+  border-image-slice: 1;
+}
+body main {
+  width: 95%;
+}
+body main .mini_menu {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  justify-content: space-evenly;
+  width: 100%;
+  margin-bottom: 1em;
+}
+body main .mini_menu a {
+  color: var(--black);
+  text-decoration: none;
+}
+body main .mini_menu a:hover {
+  color: var(--green);
+  text-decoration: underline;
+}
+body main table {
+  width: 50%;
+  margin: 1em;
+}
+body main table tr th {
+  text-align: center;
+  background-color: var(--green);
+  color: var(--white);
+  padding: 1em;
+  font-size: 1.2em;
+}
+body main table tr a {
+  color: var(--black);
+  text-decoration: none;
+}
+body main table tr a:hover {
+  color: var(--green);
+  text-decoration: underline;
+}
+body main .list_menu {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+body main .list_menu a {
+  color: var(--black);
+  text-decoration: none;
+  font-size: 1.2em;
+  margin: 1em;
+}
+body main .list_menu a:hover {
+  color: var(--green);
+  text-decoration: underline;
+}
+body main .info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  align-items: flex-start;
+  margin: 0 0 1em 0;
+  width: 50%;
+}
+body main .info h3 {
+  text-align: center;
+  background-color: var(--green);
+  color: var(--white);
+  width: 100%;
+  padding: 1em;
+  margin-bottom: 0.5em;
+}
+body main .info .entry {
+  width: 100%;
+}
+body main .info .entry th {
+  background-color: var(--background);
+  color: var(--black);
+  font-size: 1.2em;
+}
+body main .info .entry th,
+body main .info .entry td {
+  width: 50%;
+  text-align: left;
+  padding-left: 0.5em;
+}
+body main .detail {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  align-items: flex-start;
+  margin: 0 0 1em 0;
+  width: 75%;
+}
+body main .detail h3 {
+  text-align: center;
+  background-color: var(--green);
+  color: var(--white);
+  width: 100%;
+  padding: 1em;
+  margin-bottom: 0.5em;
+  border: 4px groove transparent;
+  border-image: var(--yb_border);
+  border-image-slice: 1;
+}
+body main .detail .entry {
+  width: 100%;
+}
+body main .detail .entry th {
+  background-color: var(--background);
+  color: var(--black);
+  font-size: 1.2em;
+  margin: 1em 0;
+}
+body main .detail .entry td {
+  width: 50%;
+  text-align: left;
+  padding-left: 0.5em;
+}
+body main .detail .alt_entry {
+  margin: 1em 0;
+}
+body main .detail .alt_entry th {
+  background-color: var(--green);
+  color: var(--white);
+}
