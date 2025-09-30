@@ -9,6 +9,8 @@ from userApp.models import User
 from core.utils.context import base_ctx
 from django.contrib import messages
 from django.urls import reverse
+from proposalApp.pdf import generate_proposal_pdf
+from django.http import FileResponse, HttpResponseNotAllowed
 
 def _is_owner(user):
     return user.is_active and (user.is_superuser or user.role == User.Roles.OWNER)
@@ -18,6 +20,11 @@ def _is_admin(user):
 
 def _is_employee(user):
     return user.is_active and (user.role in [User.Roles.EMPLOYEE, User.Roles.ADMIN, User.Roles.OWNER])
+
+def _allowed_staff(user):
+    return user.is_active and user.role in {
+        User.Roles.EMPLOYEE, User.Roles.ADMIN, User.Roles.OWNER
+    }
 
 @login_required
 def proposal_home(request):
@@ -121,7 +128,12 @@ def view_draft_detail(request, pk: int):
                 return redirect(request.path)
             with transaction.atomic():
                 proposal = draft.convert_to_proposal(actor=user)
-            messages.success(request, "Converted to proposal.")
+                base_url = request.build_absolute_uri("/")
+                # This controls replacing the pdf... (this will keep one version per proposal)
+                # generate_proposal_pdf(proposal, base_url=base_url, force=True, overwrite=True, delete_old=True)
+                # This controls versioning the pdf... (this will keep multiple versions per proposal)
+                generate_proposal_pdf(proposal, base_url=base_url, overwrite=False)
+            messages.success(request, "Converted to proposal and generated PDF.")
             return redirect(reverse("proposal_staff:proposal_detail", args=[proposal.id]))
 
         messages.error(request, "Unknown action.")
@@ -167,6 +179,13 @@ def view_proposal_detail(request, pk: int):
         )
         .get(pk=pk)
     )
+    if request.method == "POST":
+        action = request.POST.get("action")
+        if action == "generate_sign_link":
+            proposal.ensure_signing_link()
+            messages.success(request, "Signing link generated.")
+            return redirect(request.path)
+        
     theList = list(proposal.line_items.all())
     events = list(proposal.events.all())
 
@@ -175,3 +194,38 @@ def view_proposal_detail(request, pk: int):
     ctx.update(base_ctx(request, title=title))
     ctx["page_heading"] = title 
     return render(request, "proposal_staff/view_proposal_detail.html", ctx)
+
+@login_required
+def generate_proposal_pdf_view(request, pk: int):
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+    user = request.user
+    if not _allowed_staff(user):
+        raise PermissionDenied("Not allowed")
+
+    proposal = get_object_or_404(Proposal.objects.select_related("company"), pk=pk)
+
+    # Render/overwrite PDF (clean dev behavior)
+    base_url = request.build_absolute_uri("/")
+    generate_proposal_pdf(proposal, request=request, base_url=base_url, force=True)
+    messages.success(request, "PDF generated.")
+    return redirect(reverse("proposal_staff:proposal_detail", args=[proposal.id]))
+
+@login_required
+def view_proposal_pdf(request, pk: int):
+    user = request.user
+    if not _allowed_staff(user):
+        raise PermissionDenied("Not allowed")
+
+    proposal = get_object_or_404(Proposal.objects.select_related("company"), pk=pk)
+
+    if not proposal.pdf:
+        messages.info(request, "No PDF has been generated yet.")
+        return redirect(reverse("proposal_staff:proposal_detail", args=[proposal.id]))
+
+    # Stream the PDF inline
+    f = proposal.pdf.open("rb")
+    resp = FileResponse(f, content_type="application/pdf")
+    # Show in-browser (inline) with a readable filename
+    resp["Content-Disposition"] = f'inline; filename="{proposal.company.slug or "proposal"}-{proposal.pk}.pdf"'
+    return resp
