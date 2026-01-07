@@ -1,0 +1,6 @@
+[submodule "clients/ag-reese-associates/client"]
+	path = clients/ag-reese-associates/client
+	url = https://github.com/BeeDev-HiveCollective/agra-client.git
+[submodule "clients/ag-reese-associates/server"]
+	path = clients/ag-reese-associates/server
+	url = https://github.com/BeeDev-HiveCollective/agra-server.git
