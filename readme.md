@@ -46,10 +46,56 @@ This repository serves as a **personal development archive** for projects create
 
 ## `0x02` PROJECT MATRIX
 
+### `> CLIENT PROJECT WORKFLOW`
+
+```bash
+# PHASE 1: ESTABLISH SUBMODULE CONNECTION
+git submodule add https://github.com/BeeDev-Services/[CLIENT-REPO].git clients/[client-name]
+git add .gitmodules clients/[client-name]
+git commit -m "Add [client-name] as submodule"
+git push
+
+# PHASE 2: DEVELOPMENT CYCLE
+cd clients/[client-name]
+# >> CODE MODIFICATIONS <<
+git add .
+git commit -m "Development update"
+git push origin main
+
+# PHASE 3: SYNC MAIN REPOSITORY
+cd ../..
+git add clients/[client-name]
+git commit -m "Update [client-name] to latest version"
+git push
 ```
-01001000 01110101 01101101 01100001 01101110 00100000 01110010 01100101 01100001 01100100 01100001 01100010 01101100 01100101 
+
+### `> REPOSITORY ARCHITECTURE`
+
 ```
-*Translation: Human readable*
+BeeDev Services/
+├── clients/
+│   ├── ag-reese-associates/     [SUBMODULE → BeeDev-Services/ag-reese-associates]
+│   ├── novel-eshelf/           [SUBMODULE → BeeDev-Services/novel-eshelf]
+│   └── grit-grog-co/           [SUBMODULE → BeeDev-Services/grit-grog-co]
+├── internal-tools/
+│   └── client-list/            [LOCAL FILES]
+└── readme.md                   [MAIN DIRECTORY INDEX]
+```
+
+### `> CLONE EXISTING SETUP`
+
+```bash
+# INITIAL CLONE
+git clone https://github.com/ChristopherJ1987/BeeDev-Services.git
+cd BeeDev-Services
+
+# INITIALIZE ALL SUBMODULES
+git submodule init
+git submodule update
+
+# OR CLONE WITH SUBMODULES IN ONE COMMAND
+git clone --recurse-submodules https://github.com/ChristopherJ1987/BeeDev-Services.git
+```
 
 ---
 
