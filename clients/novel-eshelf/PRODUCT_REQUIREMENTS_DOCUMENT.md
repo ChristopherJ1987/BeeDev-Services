@@ -9,6 +9,7 @@ Version 1.0
 Novel eShelf is a cross platform e-reader application available on iOS, Android, and Web. It enables readers to discover, purchase, and read digital books in a unified, seamless experience. V1 targets a broad audience - casual readers, independent authors and publishers - delivering a polished core reading experience with a built-in storefront, synchronized libraries, offline access, and annotation tools.
 
 ### Goals & Success Metrics
+
 #### Business Goals
 - Launch a viable, revenue-generating e-reading platform across all three platforms simultaneously.
 - Establish Novel eShelf as a credible alternative in the e-reader market by prioritizing reading experience quality.
@@ -39,7 +40,8 @@ Novel eShelf (V1) serves two overlapping user segments (aside from admin):
 - Annotations / highlights / comments
 - User accounts & authentication
 - Author/publisher self-upload portal
-- Basic accesibility (font size, background, color)
+- Basic accessibility (font size, background, color)
+- Social DRM (watermarking) for purchased book/chapter downloads
 
 ##### Out of Scope - Version 2:
 - Social/sharing features (reading lists, friend activity, reviews)
@@ -62,6 +64,8 @@ Novel eShelf (V1) serves two overlapping user segments (aside from admin):
 | AUTH-05 | Session persistence with secure token refresh | Must Have |
 | AUTH-06 | Account deletion with data export option | Must Have |
 
+**`Notes:`** Age verification will be required at account creation to ensure restricted chapters and books do not appear on accounts belonging to minors.
+
 #### Storefront
 
 *Description:* - A browsable, searchable catalog of books available for purchase. Authors and publishers can self-list titles.
@@ -80,12 +84,15 @@ Novel eShelf (V1) serves two overlapping user segments (aside from admin):
 
 | ID | Requirement | Priority |
 | :--- | :--- | :--- |
-| PUB-01 | Seperate author/publisher account | Must Have |
+| PUB-01 | Separate author/publisher account | Must Have |
 | PUB-02 | Book upload: EPUB and PDF formats accepted | Must Have |
 | PUB-03 | Metadata Entry: title, author, genre, description, cover image, price | Must Have |
-| PUB-04 | Review queue before public listing (manual or automated checks) | Must Have |
+| PUB-04 | Review queue before public listing (manual admin review) | Must Have |
 | PUB-05 | Basic sales dashboard: units sold, revenue, payout status | Must Have |
 | PUB-06 | Revenue split between the author and platform | Must Have |
+| PUB-07 | Downloaded books watermarked with buyer name, email, and transaction ID at time of download | Must Have |
+| PUB-08 | Content flagged as mature/adult restricted from accounts identified as minors | Must Have |
+| PUB-09 | Author royalties paid out quarterly | Must Have |
 
 #### Library & Cross-Device Sync
 *Description:* - Every purchased or uploaded book lives in the user's personal library. Progress, bookmarks, and annotations sync automatically across all their devices.
@@ -118,6 +125,7 @@ Sync should be real-time when online (Websocket or polling fallback). On conflic
 | READ-09 | Reading progress indicator (percentage and estimated time remaining) | Must Have |
 | READ-10 | Screen brightness control within the reader (mobile) | Must Have |
 | READ-11 | Auto-hide UI chrome during reading | Must Have |
+| READ-12 | Full web reader available in browser (no app download required) | Must Have |
 
 #### Offline Reading
 *Description:* Users can download books to their device and read without an internet connection.
@@ -129,6 +137,7 @@ Sync should be real-time when online (Websocket or polling fallback). On conflic
 | OFF-03 | Offline reading with zero degradation in reading experience | Must Have |
 | OFF-04 | Offline annotations/highlights/comments either stored locally and synced on reconnect or disabled | Must Have |
 | OFF-05 | Downloaded books indicator in library | Must Have |
+| OFF-06 | Watermark applied before file is served; offline copy retains watermark | Must Have |
 
 #### Annotations, Highlights, and Comments
 *Description:* Users can highlight text and add personal notes within any book. These persist across sessions and devices.
@@ -162,8 +171,12 @@ Sync should be real-time when online (Websocket or polling fallback). On conflic
 
 **`Notes:`**
 - All three platforms share a single backend API.
-- The web application should be PWA-capable to allow basic "add to home screen" installation in V!, with a full native-like PWA as a stretch goal.
+- The web application should be PWA-capable to allow basic "add to home screen" installation in V1, with a full native-like PWA as a stretch goal.
 - EPUB rendering library: Foliate (Linux/web) or Readium SDK (iOS/Android) recommended.
+
+
+### DRM Policy
+**`DRM Policy:`** Novel eShelf (V1) uses Social DRM (watermarking). Each book/chapter is stamped at the server level with the buyer's name, email address, and transaction ID before being served via signed CDN URL. Files are not technically encrypted, but unauthorized distribution is traceable and constitutes a violation of the platform's Terms of Service. LCP (Lightweight Content Protection) encryption is a possible upgrade for V2.
 
 ### Milestones & Suggested Timeline
 
