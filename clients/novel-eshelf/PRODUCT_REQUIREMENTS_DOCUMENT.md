@@ -28,7 +28,7 @@ Novel eShelf (V1) serves two overlapping user segments (aside from admin):
 
 **`General Consumers / Book Lovers`** - Casual readers who want a clean, enjoyable reading experience. They browse by genre, want curated recommendations, and expect a seamless purchase-to-read flow.
 
-**`Independent Authors & Publishers`** - Creators who want to list and sell their work without a lrage publishing intermediary. They need a simple self-publishing portal and basic sales visibility.
+**`Independent Authors & Publishers`** - Creators who want to list and sell their work without a large publishing intermediary. They need a simple self-publishing portal and basic sales visibility.
 
 #### Scope
 ##### In Scope - Version 1:
@@ -99,7 +99,7 @@ Novel eShelf (V1) serves two overlapping user segments (aside from admin):
 | LIB-05 | "Continue Reading" shortcut on home/library screen | Must Have |
 | LIB-06 | Sort & filter library (recent, title, author, unread, read again) | Should Have |
 
-**`Sync Arhcitecture Notes:`**
+**`Sync Architecture Notes:`**
 Sync should be real-time when online (Websocket or polling fallback). On conflict, reading position uses last-write-wins; annotations use a merge strategy to avoid data loss.
 
 #### Reader (Core Reading Experience)
@@ -126,7 +126,7 @@ Sync should be real-time when online (Websocket or polling fallback). On conflic
 | :--- | :--- | :--- |
 | OFF-01 | Download any owned book for offline access | Must Have |
 | OFF-02 | Download progress indicator | Must Have |
-| OFF-03 | Offline reading with zero degredation in reading experience | Must Have |
+| OFF-03 | Offline reading with zero degradation in reading experience | Must Have |
 | OFF-04 | Offline annotations/highlights/comments either stored locally and synced on reconnect or disabled | Must Have |
 | OFF-05 | Downloaded books indicator in library | Must Have |
 
