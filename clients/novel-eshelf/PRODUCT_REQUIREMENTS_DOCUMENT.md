@@ -174,6 +174,19 @@ Sync should be real-time when online (Websocket or polling fallback). On conflic
 - The web application should be PWA-capable to allow basic "add to home screen" installation in V1, with a full native-like PWA as a stretch goal.
 - EPUB rendering library: Foliate (Linux/web) or Readium SDK (iOS/Android) recommended.
 
+### Proposed Final Stack
+
+| Layer | Technology |
+|:-- | :-- |
+| Web Client | React + Expo + Tamagui |
+| App Client (iOS/Android) | React Native + Expo + Tamagui |
+| Backend API | Django + Django REST Framework |
+| Real-time Sync | Django Channels |
+| Database | PostgreSQL |
+| File Storage | Local (during dev) / Cloudflare R2 (free tier) for EPUB/PDF files |
+| Payments | Stripe |
+| Auth | Django built-in + SimpleJWT |
+| Hosting | (dev/staging)Render free tier |
 
 ### DRM Policy
 **`DRM Policy:`** Novel eShelf (V1) uses Social DRM (watermarking). Each book/chapter is stamped at the server level with the buyer's name, email address, and transaction ID before being served via signed CDN URL. Files are not technically encrypted, but unauthorized distribution is traceable and constitutes a violation of the platform's Terms of Service. LCP (Lightweight Content Protection) encryption is a possible upgrade for V2.
