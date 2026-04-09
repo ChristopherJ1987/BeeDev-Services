@@ -107,78 +107,73 @@ Sync should be real-time when online (Websocket or polling fallback). On conflic
 
 | ID | Requirement | Priority |
 | :--- | :--- | :--- |
-| 
+| READ-01 | EPUB 3 rendering with reflowable text | Must Have |
+| READ-02 | PDF rendering with pinch-to-zoom | Must Have |
+| READ-03 | Adjustable font size (min 10pt, max 32pt) | Must Have |
+| READ-04 | Font selection (min 3 options: serif, sans-serif, monospace) | Must Have |
+| READ-05 | Reading themes: light, dark, sepia | Must Have |
+| READ-06 | Page turn via tap zones and swipe gestures (mobile) | Must Have |
+| READ-07 | Scroll mode vs. paginated mode toggle | Should Have |
+| READ-08 | Chapter navigation via table of contents | Must Have |
+| READ-09 | Reading progress indicator (percentage and estimated time remaining) | Must Have |
+| READ-10 | Screen brightness control within the reader (mobile) | Must Have |
+| READ-11 | Auto-hide UI chrome during reading | Must Have |
+
+#### Offline Reading
+*Description:* Users can download books to their device and read without an internet connection.
+
+| ID | Requirement | Priority |
+| :--- | :--- | :--- |
+| OFF-01 | Download any owned book for offline access | Must Have |
+| OFF-02 | Download progress indicator | Must Have |
+| OFF-03 | Offline reading with zero degredation in reading experience | Must Have |
+| OFF-04 | Offline annotations/highlights/comments either stored locally and synced on reconnect or disabled | Must Have |
+| OFF-05 | Downloaded books indicator in library | Must Have |
+
+#### Annotations, Highlights, and Comments
+*Description:* Users can highlight text and add personal notes within any book. These persist across sessions and devices.
+
+| ID | Requirement | Priority |
+| :--- | :--- | :---|
+| ANN-01 | Text selection with highlight (4 color options minimum) | Must Have |
+| ANN-02 | Add, edit, and delete text notes on any selection | Must Have |
+| ANN-03 | Bookmarks on any page | Must Have |
+| ANN-04 | Annotations panel: view all highlights and notes for a book | Must Have |
+| ANN-05 | Jump to selection from annotations | Must Have |
+| ANN-06 | Export annotations as plain text or CSV | Should Have |
+
+#### Accessibility
+
+| ID | Requirement | Priority |
+| :--- | :--- | :--- |
+| ACC-01 | VoiceOver (iOS) and TalkBack (Android) support | Must Have |
+| ACC-02 | WCAG 2.1 AA Compliance for web | Must Have |
+| ACC-03 | Minimum tap target size of 44x44pt (mobile) | Must Have |
+| ACC-04 | High contrast mode support | Should Have |
 
 
+### Platform Requirements
 
----
-1. Goals & Success Metric
-2. Features & Requirements
-5.4 Reader (Core Reading Experience)
-IDRequirementPriorityREAD-01EPUB 3 rendering with reflowable textMust HaveREAD-02PDF rendering with pinch-to-zoomMust HaveREAD-03Adjustable font size (min 10pt, max 32pt)Must HaveREAD-04Font selection (minimum 3 options: Serif, Sans-Serif, Monospace)Must HaveREAD-05Reading themes: Light, Dark, SepiaMust HaveREAD-06Page turn via tap zones and swipe gestures (mobile)Must HaveREAD-07Scroll mode vs. paginated mode toggleMust HaveREAD-08Chapter navigation via table of contentsMust HaveREAD-09Reading progress indicator (percentage and estimated time remaining)Must HaveREAD-10Screen brightness control within the reader (mobile)Should HaveREAD-11Tap-to-define (dictionary lookup for selected words)Should HaveREAD-12Auto-hide UI chrome during readingMust Have
+| Platform | Min OS / Browser Support | Format |
+| :--- | :--- | :--- |
+| iOS | iOS 16 + | React Native + Expo + Tamagui |
+| Android | Android 10 (API 29) + | React Native + Expo + Tamagui |
+| Web | Last 2 major versions of Chrome, Safari, Firefox, Edge (PWA-capable) | React + Expo + Tamagui |
 
-5.5 Offline Reading
-Description: Users can download books to their device and read without an internet connection.
-IDRequirementPriorityOFF-01Download any owned book for offline accessMust HaveOFF-02Download progress indicatorMust HaveOFF-03Offline reading with zero degradation in reading experienceMust HaveOFF-04Offline annotations and highlights stored locally, synced on reconnectMust HaveOFF-05Downloaded books indicator in library viewMust HaveOFF-06Manual removal of downloaded books to free storageMust HaveOFF-07Storage usage display per book and totalShould Have
+**`Notes:`**
+- All three platforms share a single backend API.
+- The web application should be PWA-capable to allow basic "add to home screen" installation in V!, with a full native-like PWA as a stretch goal.
+- EPUB rendering library: Foliate (Linux/web) or Readium SDK (iOS/Android) recommended.
 
-5.6 Annotations & Highlights
-Description: Users can highlight text and add personal notes within any book. These persist across sessions and devices.
-IDRequirementPriorityANN-01Text selection with highlight (4 color options minimum)Must HaveANN-02Add, edit, and delete text notes on any selectionMust HaveANN-03Bookmarks on any pageMust HaveANN-04Annotations panel: view all highlights and notes for a bookMust HaveANN-05Jump to location from annotations panelMust HaveANN-06Export annotations as plain text or CSVShould Have
+### Milestones & Suggested Timeline
 
-5.7 Accessibility
-IDRequirementPriorityACC-01VoiceOver (iOS) and TalkBack (Android) supportMust HaveACC-02WCAG 2.1 AA compliance for webMust HaveACC-03Minimum tap target size of 44×44pt (mobile)Must HaveACC-04High contrast mode supportShould Have
-
-1. Platform Requirements
-PlatformMin OS / Browser SupportFormatiOSiOS 16+Native Swift / SwiftUIAndroidAndroid 10 (API 29)+Native KotlinWebLast 2 major versions of Chrome, Safari, Firefox, EdgeReact (PWA-capable)
-Notes:
-
-All three platforms share a single backend API.
-The web app should be PWA-capable to allow basic "add to home screen" installation in V1, with a full native-like PWA as a stretch goal.
-EPUB rendering library: Foliate (Linux/web) or Readium SDK (iOS/Android) recommended.
-
-
-7. Technical Architecture (High Level)
-┌─────────────────────────────────────────────┐
-│              Client Applications             │
-│     iOS App │ Android App │ Web App (PWA)    │
-└────────────────────┬────────────────────────┘
-                     │ HTTPS / REST + WebSocket
-┌────────────────────▼────────────────────────┐
-│               API Gateway / BFF              │
-│          (Node.js / GraphQL or REST)         │
-├──────────────┬──────────────┬───────────────┤
-│  Auth Service│ Catalog Svc  │ Library Svc   │
-│  (JWT/OAuth) │ (Books, Meta)│ (Progress,    │
-│              │              │  Annotations) │
-├──────────────┴──────────────┴───────────────┤
-│          Payments (Stripe)                   │
-│          File Storage (S3 / R2)              │
-│          Database (PostgreSQL)               │
-│          CDN (CloudFront / Cloudflare)       │
-└─────────────────────────────────────────────┘
-Key decisions for V1:
-
-Book files served via signed CDN URLs (never exposed directly)
-DRM approach: lightweight social DRM (watermarking) for V1; Readium LCP as a V2 upgrade path
-Offline storage: encrypted SQLite on device for content and annotation cache
-
-
-8. Non-Functional Requirements
-AreaRequirementPerformanceReader renders page turn in < 100ms on mid-range devicesPerformanceStorefront initial load < 2s on 4G connectionReliabilityAPI uptime SLA ≥ 99.9%SecurityBook files encrypted at rest and in transitSecurityPCI-DSS compliance delegated to Stripe; no raw card data storedScalabilityArchitecture must support 50,000 MAU without re-platformingData PrivacyGDPR and CCPA compliant; privacy policy in-app
-
-9. Milestones & Suggested Timeline
-MilestoneDeliverableEst. DurationM1 — FoundationAuth, API scaffold, DB schema, CI/CD pipeline3 weeksM2 — StorefrontCatalog, search, book detail, payments4 weeksM3 — Reader CoreEPUB/PDF rendering, reading settings, progress4 weeksM4 — Library & SyncLibrary UI, cross-device sync, offline downloads3 weeksM5 — AnnotationsHighlights, notes, bookmarks, annotations panel2 weeksM6 — Publisher PortalUpload flow, review queue, sales dashboard2 weeksM7 — QA & PolishBug fixes, accessibility audit, performance tuning3 weeksTotal~21 weeks
-
-10. Open Questions
-These items need decisions before or during development:
-
-DRM Policy — Will V1 use social DRM (watermarking) or a stricter scheme? This affects the reader architecture significantly.
-Content Moderation — What is the review process for self-published books before they go live? Manual review, automated scanning, or both?
-Pricing Model — Is V1 purely pay-per-book, or is a freemium tier (free books + paid) in scope?
-Payout Schedule — How frequently are author royalties paid out (monthly, threshold-based)?
-Supported Languages / Localization — English-only for V1, or multilingual from day one?
-Web Reader Strategy — Full web reader in V1 or redirect web users to download the app?
-
-
-11. Appendix — Glossary
-TermDefinitionEPUB 3The current open standard for digital booksReadium LCPLightweight Content Protection, an open DRM standardSocial DRMWatermarking a book with buyer info instead of hard encryptionPWAProgressive Web App — a web app installable like a native appBFFBackend for Frontend — an API layer tailored per client type
+| Milestone | Deliverable | Estimated Duration |
+| :--- | :--- | :--- |
+| M1 - Foundation | Auth, API scaffold, DB schema, CI/CD pipeline | 3 weeks |
+| M2 - Storefront | Catalog, search, book detail, payments | 4 weeks |
+| M3 - Reader Core | EPUB/PDF rendering, reading settings, progress | 4 weeks |
+| M4 - Library & Sync | Library UI, cross-device sync, offline downloads | 3 weeks |
+| M5 - Annotations | Highlights, notes, bookmarks, annotations panel | 2 weeks |
+| M6 - Publisher Portal | Upload flow, review queue, sales dashboard | 2 weeks |
+| M7 - QA & Polish | Bug fixes, accessibility audit, performance tuning | 3 weeks |
+| Total || 21 weeks |
