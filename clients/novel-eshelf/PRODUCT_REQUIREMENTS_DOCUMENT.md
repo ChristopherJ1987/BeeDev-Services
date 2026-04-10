@@ -234,6 +234,8 @@ Sync should be real-time when online (Django channels / Websocket with polling f
 ### DRM Policy
 **`DRM Policy:`** Novel eShelf (V1) uses Social DRM (watermarking). Each book/chapter is stamped at the server level with the buyer's name, email address, and transaction ID before being served via signed CDN URL. Files are not technically encrypted, but unauthorized distribution is traceable and constitutes a violation of the platform's Terms of Service. LCP (Lightweight Content Protection) encryption is a possible upgrade for V2.
 
+---
+
 ### Milestones & Suggested Timeline
 
 | Milestone | Deliverable | Estimated Duration |
