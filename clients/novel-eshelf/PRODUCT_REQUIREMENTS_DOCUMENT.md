@@ -3,7 +3,7 @@ Version 1.0
 
 `Created: April 8, 2026`
 
-`Last Updated: April 9, 2026`
+`Last Updated: April 11, 2026`
 
 ## Executive Summary
 Novel eShelf is a cross platform e-reader application available on iOS, Android, and Web. It enables readers to discover, purchase, and read digital books in a unified, seamless experience. V1 targets a broad audience - casual readers, independent authors and publishers - delivering a polished core reading experience with a built-in storefront, synchronized libraries, offline access, and annotation tools.
@@ -42,7 +42,7 @@ Novel eShelf (V1) serves two overlapping user segments (aside from admin):
 - Author/publisher self-upload portal
 - Basic accessibility (font size, background, color)
 - Social DRM (watermarking) for purchased book/chapter downloads
-- Currency system - Quills & Ink Blots *(in design - see Currency System section)*
+- Currency system - Token Wallet (Black Ink Drops, Gold Ink Drops, Quills)
 
 ##### Out of Scope - Version 2:
 - Social/sharing features (reading lists, friend activity, reviews)
@@ -78,8 +78,8 @@ Novel eShelf (V1) serves two overlapping user segments (aside from admin):
 | :--- | :--- | :--- |
 | STORE-01 | Homepage with featured books, new releases, and genre sections | Must Have |
 | STORE-02 | Full-text search by title, author, ISBN, and keyword | Must Have |
-| STORE-03 | Book detail page (cover, description, author bio, price, sample) | Must Have |
-| STORE-04 | Quill top-up purchase flow via Stripe (card + Apple Pay / Google Pay)(*to be updated pending currency system design*) | Must Have |
+| STORE-03 | Book detail page (cover, description, author bio, token price, sample) | Must Have |
+| STORE-04 | Quill top-up purchase flow via Stripe (card + Apple Pay / Google Pay) | Must Have |
 | STORE-05 | Genre/category browsing and filtering | Must Have |
 | STORE-06 | Author profile pages linking to their catalog | Should Have |
 | STORE-07 | Wishlist / save-for-later | Should Have |
@@ -92,34 +92,98 @@ Novel eShelf (V1) serves two overlapping user segments (aside from admin):
 | :--- | :--- | :--- |
 | PUB-01 | Separate author/publisher account | Must Have |
 | PUB-02 | Book upload: EPUB and PDF formats accepted | Must Have |
-| PUB-03 | Metadata Entry: title, author, genre, description, cover image, price | Must Have |
+| PUB-03 | Metadata Entry: title, author, genre, description, cover image, token price | Must Have |
 | PUB-04 | Review queue before public listing (manual admin review required) | Must Have |
 | PUB-05 | Basic sales dashboard: units sold, revenue, payout status | Must Have |
-| PUB-06 | Revenue split between the author and platform | Must Have |
+| PUB-06 | Revenue split applied per author tier and publishing track(Autonomy or Exclusivity) | Must Have |
 | PUB-07 | Downloaded books watermarked with buyer name, email, and transaction ID at time of download | Must Have |
 | PUB-08 | Content flagged as mature/adult restricted from accounts identified as minors | Must Have |
 | PUB-09 | Author royalties paid out quarterly (*pending client confirmation*) | Must Have |
 
 ---
 
-#### Currency System - Quills & Ink Blots
-*(In Design - to be finalized pending client documentation)*
+#### Currency System - Token Wallet
 
-**`Overview:`** Novel eShelf uses a dual in-app currency system rather than direct book purchases.
+**`Overview:`** Novel eShelf uses a dual in-app currency system rather than direct book purchases. All tokens are held in the user's Token Wallet.
 
-|Term | Definition |
-| :--- | :--- |
-| Quills | Premium currency purchased with real money via Stripe |
-| Ink Blots | Earned currency acquired watching ads |
+##### Token Types
+|Token | How they are Acquired | Cost to User |
+| :--- | :--- | :--- |
+| Black Ink Drops | Daily login reward | Free |
+| Gold Ink Drops | Watching ads (short or long ads - structure TBD) | Free |
+| Quills | Purchased via Stripe | Real money (10 quills gifted at account creation)
 
-**`Notes:`** Both Quills and Ink Blots can be used to purchase individual chapters or full books. Free books require no currency. Author tiers influence the Quill/Ink Blot cost of their content.
+**`Spending Order:`** When a purchase is made, tokens are consumed in this order: Black Ink Drops (first), Gold Ink Drops (second), and Quills (last).
+
+**`Starting Balance at Account Creation:`** 2 Black Ink Drops, 3 Gold Ink Drops, 10 Quills.
+
+##### Content Access Tiers
+
+| Access Level | Tokens Required | Cost to User |
+| :--- | :--- | :--- |
+| Truly Free | None | Free |
+| Free Tier | Black Ink Drops or Gold Ink Drops | Free (no real money) |
+| Paid | Quills | Real money (except gifted starting quills) |
+
+##### Author Revenue by Transaction Type
+
+| Transaction Type | Author Revenue |
+| :--- | :---|
+| Black Ink Drop purchase | No revenue generated |
+| Gold Ink Drop purchase | Author receives 50% of associated revenue |
+| Quill purchase | Author receives 30% of revenue (varies by tier and publishing track - see Author Tiers) |
+
+##### Author Tiers
+Tiers are assigned by Novel eShelf admin based on the metrics below. Authors do not self-select their tier.
+
+|| Tier 1 Novice | Tier 2 Emerging | Tier 3 Established | Tier 4 Professional | Tier 5 Best Seller |
+|:--- | :--- | :--- | :--- | :--- | :--- |
+| Total Book Purchases | 0 - 1,000 | 1,000 - 5,000 | 5,000 - 25,000 | 25,000 - 100,000 | 100,000 + |
+| Chapters Read | < 10,000 | 10,000 - 50,000 | 50,000 - 200,000 | 200,000 - 1,000,000 | 1,000,000 + |
+| Books Completed | 0 - 3 | 4 - 9 | 10 -15 | 16 -25 | 25 + |
+| Upload Frequency | Infrequent | > 1/week | > 2/week | > 3/week | > 4/week |
+| Editing Level | Heavy support needed | Moderate Intervention | Light copy-editing | Near publication-ready | Minimal to no edits |
+
+##### Publishing Tracks & Revenue Split
+Authors choose one of two publishing tracks, each with a different revenue split per tier:
+
+| Track | T-1 | T-2 | T-3 | T-4 | T-5 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| Author - Autonomy | 30% | 40% | 50% | 60% | 70% |
+| Novel eShelf - Autonomy | 70% | 60% | 50% | 40% | 30% |
+| Author - Exclusivity | 40% | 50% | 60% | 70% | 80% |
+| Novel eShelf - Exclusivity | 60% | 50% | 40% | 30% | 20% |
+
+##### Chapter Pricing by Word Count & Tier
+
+| Word Count | T-1 | T-2 | T-3 | T-4 | T-5 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| 500 - 1,000 words | $0.05 | $0.10 | $0.15 | $0.20 | $0.25 |
+| 1,000 - 2,500 words | $0.20 | $0.25 | $0.30 | $0.35 | $0.40 |
+| 2,500 + words | $0.50 | $0.55 | $0.60 | $0.65 | $0.70 |
+
+##### Author Earnings per Chapter(Autonomy Track)
+
+| Word Count | T-1(30%) | T-2(40%) | T-3(50%) | T-4(60%) | T-5(70%) |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| 500 - 1,000 words | $0.015 | $0.040 | $0.075 | $0.120 | $0.175 |
+| 1,000 - 2,500 words | $0.060 | $0.100 | $0.150 | $0.210 | $0.280 |
+| 2.500 + words | $0.150 | $0.220 | $0.300 | $0.390 | $0.490 |
+
+##### Author Earnings per Chapter(Exclusivity Track)
+
+| Word Count | T-1(40%) | T-2(50%) | T-3(60%) | T-4(70%) | T-5(80%) |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| 500 - 1,000 words | $0.020 | $0.050 | $0.090 | $0.140 | $0.200 |
+| 1,000 - 2,500 words | $0.080 | $0.125 | $0.180 | $0.245 | $0.320 |
+| 2,500 + words | $0.200 | $0.275 | $0.360 | $0.455 | $0.560 |
 
 **`Open Items (to be resolved):`**
+- Ad structure - and their relationship to Black vs Gold Ink Drop rewards
+- Book pricing - assumed to be the sum of chapter prices
 - Quill-to-dollar exchange rate
-- Ink Blot-to-ad ratio (how many ads = how many Ink Blots)
-- Whether Ink Blots can purchase all content or only select titles
-- Author tier structure and how tiers map to Quill/Ink Blot pricing
 - Ad provider / SDK selection
+- Tier 5 autonomy rights - referenced in documentation but undefined (TBD - pending clarification)
 
 ---
 
@@ -136,7 +200,7 @@ Novel eShelf (V1) serves two overlapping user segments (aside from admin):
 | LIB-06 | Sort & filter library (recent, title, author, unread, read again) | Should Have |
 
 **`Sync Architecture Notes:`**
-Sync should be real-time when online (Django channels / Websocket with polling fallback). On conflict, reading position uses last-write-wins; annotations use a merge strategy to avoid data loss.
+Sync should be real-time when online (Django Channels / Websocket with polling fallback). On conflict, reading position uses last-write-wins; annotations use a merge strategy to avoid data loss.
 
 ---
 
@@ -247,6 +311,6 @@ Sync should be real-time when online (Django channels / Websocket with polling f
 | M5 - Backend & Integration | Django REST API, real payments, library sync (Django Channels), watermarking | 5 weeks |
 | M6 - Offline & Annotations | Offline downloads, local annotation storage, sync on reconnect (both clients) | 2 weeks |
 | M7 - Publisher Portal | Upload flow, admin review queue (Django admin), sales dashboard | 3 weeks |
-| M8 - Currency System | Quills & Ink Blots, ad integration, author tiers (timeline TBD pending design) | 3 weeks |
+| M8 - Currency System | Token Wallet, Quill top-ups, Ink Drop rewards, ad integration, author tiers | 3 weeks |
 | M9 - QA & Polish | Bug fixes, accessibility audit, performance tuning, cross-platform testing | 3 weeks |
 | Total || ~30 weeks |
