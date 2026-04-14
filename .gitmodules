@@ -4,3 +4,12 @@
 [submodule "clients/ag-reese-associates/server"]
 	path = clients/ag-reese-associates/server
 	url = https://github.com/BeeDev-HiveCollective/agra-server.git
+[submodule "clients/novel-eshelf/noveleshelf-client"]
+	path = clients/novel-eshelf/noveleshelf-client
+	url = git@github.com:BeeDev-ValorCollective/noveleshelf-client.git
+[submodule "clients/novel-eshelf/noveleshelf-app"]
+	path = clients/novel-eshelf/noveleshelf-app
+	url = git@github.com:BeeDev-ValorCollective/noveleshelf-app.git
+[submodule "clients/novel-eshelf/noveleshelf-server"]
+	path = clients/novel-eshelf/noveleshelf-server
+	url = git@github.com:BeeDev-ValorCollective/noveleshelf-server.git
